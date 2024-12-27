@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - VBANK & VTUShsh</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background: linear-gradient(to bottom, #4CAF50, #f4f4f9);
+            color: #333;
+        }
+
+        header {
+            background: #003366;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-box {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #003366;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            border-color: #0066cc;
+            outline: none;
+        }
+
+        .forgot-password {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #0066cc;
+        }
+
+        .forgot-password a {
+            text-decoration: none;
+            color: #0066cc;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .login-btn:hover {
+            background-color: #45a049;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .signup-link a {
+            color: #0066cc;
+            font-size: 1rem;
+            text-decoration: none;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .support-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .support-btn:hover {
+            background-color: #005bb5;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .offline-message {
+            color: orange;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>VBANK & MFVDAM VTUShsh</h1>
+        <p>Your Trusted Platform for Banking and VTU Services</p>
+    </header>
+
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Login to Your Account</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="login-input">Email Address / Phone Number / Username</label>
+                    <input type="text" id="login-input" name="login-input" placeholder="Enter your email, phone, or username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="forgot-password">
+                    <a href="forgot-password.html">Forgot Password?</a>
+                </div>
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+            <div class="signup-link">
+                <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
+            </div>
+            <button class="support-btn" onclick="window.location.href='chat.html'">Contact Support</button>
+            <div class="error-message" id="error-message">Incorrect login credentials, please try again or reset your password.</div>
+            <div class="offline-message" id="offline-message">You are offline. Please check your network or turn off airplane mode.</div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import necessary Firebase libraries
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signInWithPhoneNumber, onAuthStateChanged, signInWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
+            authDomain: "vbankmfv.firebaseapp.com",
+            projectId: "vbankmfv",
+            storageBucket: "vbankmfv.firebasestorage.app",
+            messagingSenderId: "920021461554",
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+            measurementId: "G-G37D2FP82T"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const loginForm = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+        const offlineMessage = document.getElementById('offline-message');
+
+        // Check if the user is online
+        if (!navigator.onLine) {
+            offlineMessage.style.display = 'block';
+        }
+
+        loginForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const loginInput = document.getElementById('login-input').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Query Firestore for the user with email/phone/username
+                const q = query(collection(db, "users"), where("username", "==", loginInput));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    throw new Error("User not found");
+                }
+
+                // Assuming that there's only one match in Firestore
+                const userDoc = querySnapshot.docs[0].data();
+                const userUid = userDoc.uid;
+
+                // Now sign in using Firebase Authentication
+                signInWithEmailAndPassword(auth, userDoc.email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        if (user.uid === userUid) {
+                            window.location.href = 'account.html';  // Redirect to the user's account page
+                        } else {
+                            throw new Error("Authentication failed");
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Login failed", error);
+                        errorMessage.style.display = 'block';
+                    });
+            } catch (error) {
+                console.error("Error querying Firestore or login", error);
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>
