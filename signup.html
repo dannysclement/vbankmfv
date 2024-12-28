@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - VBankMFV</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+      color: #fff;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 50px auto;
+      background: #fff;
+      color: #333;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin: 0;
+      color: #2E7D32;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .welcome {
+      text-align: center;
+      background-color: #2E7D32;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      animation: welcomeSlide 5s infinite;
+    }
+
+    @keyframes welcomeSlide {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    input, select {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 10px;
+      margin-top: 20px;
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #2E7D32;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+    }
+
+    .social-media-select {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .social-media-select label {
+      font-size: 12px;
+      margin-right: 10px;
+    }
+
+    .message {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Welcome to VBankMFV</h1>
+      <p>Your trusted banking and VTU service platform</p>
+    </div>
+    <div class="welcome">
+      <p>🌟 Start your transactions today with ease and security! 🌟</p>
+    </div>
+    <form id="signup-form">
+      <label for="first-name">First Name</label>
+      <input type="text" id="first-name" name="first_name" placeholder="Enter your first name" required>
+
+      <label for="middle-name">Middle Name</label>
+      <input type="text" id="middle-name" name="middle_name" placeholder="Enter your middle name">
+
+      <label for="last-name">Last Name</label>
+      <input type="text" id="last-name" name="last_name" placeholder="Enter your last name" required>
+
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="Choose a username" required>
+      <div id="username-message" class="message"></div>
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+      <div id="email-message" class="message"></div>
+
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+      <div id="phone-message" class="message"></div>
+
+      <label for="hear-about-us">How did you hear about us?</label>
+      <select id="hear-about-us" name="hear_about_us" required>
+        <option value="">Select an option</option>
+        <option value="facebook">Facebook</option>
+        <option value="messenger">Messenger</option>
+        <option value="instagram">Instagram</option>
+        <option value="whatsapp">WhatsApp</option>
+        <option value="x">X (Twitter)</option>
+        <option value="telegram">Telegram</option>
+      </select>
+
+      <label for="password">New Password</label>
+      <input type="password" id="password" name="password" placeholder="Create a new password" required>
+
+      <label for="confirm-password">Confirm Password</label>
+      <input type="password" id="confirm-password" name="confirm_password" placeholder="Confirm your password" required>
+
+      <button type="submit">Sign Up</button>
+    </form>
+    <div class="footer">
+      <p>© 2022 VBankMFV. All rights reserved.</p>
+      <p>Already have an account? <a href="login.html">Sign in here</a></p>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
+      authDomain: "vbankmfv.firebaseapp.com",
+      projectId: "vbankmfv",
+      storageBucket: "vbankmfv.firebasestorage.app",
+      messagingSenderId: "920021461554",
+      appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+      measurementId: "G-G37D2FP82T"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const signupForm = document.getElementById('signup-form');
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const usernameMessage = document.getElementById('username-message');
+    const emailMessage = document.getElementById('email-message');
+    const phoneMessage = document.getElementById('phone-message');
+
+    // Real-time Firestore checks
+    const checkIfExists = async (field, value, messageElement) => {
+      const fieldQuery = query(collection(db, "users"), where(field, "==", value));
+      const snapshot = await getDocs(fieldQuery);
+
+      if (!snapshot.empty) {
+        messageElement.textContent = `${field.charAt(0).toUpperCase() + field.slice(1)} already exists.`;
+        return true;
+      } else {
+        messageElement.textContent = "";
+        return false;
+      }
+    };
+
+    // Event listeners for real-time checking
+    usernameInput.addEventListener('input', () => {
+      checkIfExists("username", usernameInput.value, usernameMessage);
+    });
+
+    emailInput.addEventListener('input', () => {
+      checkIfExists("email", emailInput.value, emailMessage);
+    });
+
+    phoneInput.addEventListener('input', () => {
+      checkIfExists("phone", phoneInput.value, phoneMessage);
+    });
+
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = emailInput.value;
+      const phone = phoneInput.value;
+      const username = usernameInput.value;
+
+      if (phone.length !== 11 || !phone.startsWith('0')) {
+        phoneMessage.textContent = "Phone number must be 11 digits and start with 0.";
+        return;
+      }
+
+      const emailExists = await checkIfExists("email", email, emailMessage);
+      const phoneExists = await checkIfExists("phone", phone, phoneMessage);
+      const usernameExists = await checkIfExists("username", username, usernameMessage);
+
+      if (emailExists || phoneExists || usernameExists) return;
+
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Add user details to Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          firstName: document.getElementById('first-name').value,
+          middleName: document.getElementById('middle-name').value,
+          lastName: document.getElementById('last-name').value,
+          username: username,
+          email: email,
+          phone: phone,
+          hearAboutUs: document.getElementById('hear-about-us').value,
+          uid: user.uid,
+        });
+
+        window.location.href = "account.html";
+      } catch (error) {
+        console.error("Error signing up: ", error);
+      }
+    });
+  </script>
+</body>
+</html>
