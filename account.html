@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrollable Dashboard</title>
+    <style>
+        /* Global Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+        }
+
+        .container {
+            padding: 15px;
+        }
+
+        /* Header Section */
+        .header {
+            background-color: #1c1c1c;
+            border-radius: 10px;
+            padding: 10px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 12px;
+            margin: 5px 0;
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background-color: #6a1b9a;
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .balance-card h2 {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .balance-card .transaction-history {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .balance-card .add-money {
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        .balance-card .add-money:hover {
+            background-color: #3700b3;
+        }
+
+        .balance-card .toggle-balance {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .balance-info {
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Money Transfer Section */
+        .money-transfer {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+
+        .money-transfer div {
+            background-color: #1c1c1c;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+            margin: 0 5px;
+            font-size: 12px;
+        }
+
+        .money-transfer div img {
+            width: 30px;
+            margin-bottom: 5px;
+        }
+
+        /* Reward Section */
+        .reward-section {
+            background-color: #1c1c1c;
+            border-radius: 10px;
+            margin: 15px 0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .reward-section button {
+            background-color: #6a1b9a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .reward-section button:hover {
+            background-color: #3700b3;
+        }
+
+        /* Services Section */
+        .services {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 10px;
+        }
+
+        .service-item {
+            background-color: #1c1c1c;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            flex: 1 0 21%;
+            box-sizing: border-box;
+        }
+
+        .service-item img {
+            width: 30px;
+            margin-bottom: 5px;
+        }
+
+        /* Scrollable Footer Section */
+        .footer {
+            background-color: #1c1c1c;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .footer button {
+            background: none;
+            border: none;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .footer button img {
+            width: 20px;
+            margin-bottom: 5px;
+        }
+
+        .footer button span {
+            display: block;
+            font-size: 10px;
+        }
+
+        .footer button:hover {
+            color: #6a1b9a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1 id="user-name">Hi, Loading...</h1>
+            <p>Welcome, let's make payments!</p>
+            <p id="system-message">📢 Loading message...</p> <!-- This will display the system message -->
+        </div>
+
+        <!-- Balance Section -->
+        <div class="balance-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="user-balance">₦0.00</h2>
+                <span class="toggle-balance" onclick="toggleBalance()">&#9660;</span> <!-- Toggle icon -->
+            </div>
+            <div class="balance-info" id="balance-info" style="display: none;">
+                <h3 id="user-balance-info">₦50,000</h3>
+                <span class="transaction-history" onclick="redirectToHistory()">Transaction History</span>
+                <button class="add-money" onclick="redirectToAddMoney()">Add Money</button>
+            </div>
+        </div>
+
+        <!-- Money Transfer Section -->
+        <div class="money-transfer">
+            <div onclick="redirectToPage('bank.html')">
+                <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="Bank">
+                <p>To Bank</p>
+            </div>
+            <div onclick="redirectToPage('palmPay.html')">
+                <img src="https://img.icons8.com/color/48/palm-tree.png" alt="PalmPay">
+                <p>To PalmPay</p>
+            </div>
+            <div onclick="redirectToPage('withdraw.html')">
+                <img src="https://img.icons8.com/color/48/cash-in-hand.png" alt="Withdraw">
+                <p>Withdraw</p>
+            </div>
+        </div>
+
+        <!-- Reward Section -->
+        <div class="reward-section">
+            <p id="reward-message">₦200,000 Daily Login Reward! Claim your daily Trial Cash.</p>
+            <button onclick="redirectToPage('reward.html')">Claim</button>
+        </div>
+
+        <!-- Services Section -->
+        <div class="services">
+            <div class="service-item" onclick="redirectToPage('airtime.html')">
+                <img src="https://img.icons8.com/color/48/phone.png" alt="Airtime">
+                <p>Airtime</p>
+            </div>
+            <div class="service-item" onclick="redirectToPage('data.html')">
+                <img src="https://img.icons8.com/color/48/internet.png" alt="Data">
+                <p>Data</p>
+            </div>
+            <div class="service-item" onclick="redirectToPage('betting.html')">
+                <img src="https://cdn-icons-png.flaticon.com/512/8893/8893296.png" alt="Betting Fund">
+                <p>Betting Fund</p>
+            </div>
+            <div class="service-item" onclick="redirectToPage('electricity.html')">
+                <img src="https://img.icons8.com/color/48/electricity.png" alt="Electricity">
+                <p>Electricity</p>
+            </div>
+            <div class="service-item" onclick="redirectToPage('tv.html')">
+                <img src="https://img.icons8.com/color/48/tv.png" alt="TV">
+                <p>TV</p>
+            </div>
+            <div class="service-item" onclick="redirectToPage('winBig.html')">
+                <img src="https://img.icons8.com/color/48/cash-register.png" alt="Win Big">
+                <p>Win Big</p>
+            </div>
+            <div class="service-item" onclick="redirectToPage('referEarn.html')">
+                <img src="https://img.icons8.com/color/48/gift.png" alt="Refer & Earn">
+                <p>Refer & Earn</p>
+            </div>
+            <div class="service-item" onclick="redirectToPage('atmCard.html')">
+                <img src="https://img.icons8.com/color/48/card-in-use.png" alt="ATM Card">
+                <p>ATM Card</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scrollable Footer Section -->
+    <div class="footer">
+        <button onclick="refreshPage()">
+            <img src="https://img.icons8.com/ios-filled/50/home.png" alt="Home">
+            <span>Home</span>
+        </button>
+        <button onclick="redirectToPage('loan.html')">
+            <img src="https://cdn-icons-png.flaticon.com/512/2058/2058198.png" alt="Loan">
+            <span>Loan</span>
+        </button>
+        <button onclick="redirectToPage('wealth.html')">
+            <img src="https://img.icons8.com/ios-filled/50/bar-chart.png" alt="Wealth">
+            <span>Wealth</span>
+        </button>
+        <button onclick="redirectToPage('reward.html')">
+            <img src="https://img.icons8.com/ios-filled/50/gift.png" alt="Reward">
+            <span>Reward</span>
+        </button>
+        <button onclick="redirectToPage('me.html')">
+            <img src="https://img.icons8.com/ios-filled/50/user.png" alt="Me">
+            <span>Me</span>
+        </button>
+    </div>
+
+    <script type="module">
+        // Import Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
+            authDomain: "vbankmfv.firebaseapp.com",
+            projectId: "vbankmfv",
+            storageBucket: "vbankmfv.firebasestorage.app",
+            messagingSenderId: "920021461554",
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+            measurementId: "G-G37D2FP82T"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const analytics = getAnalytics(app);
+
+        // Fetch system message in real-time
+        const systemMessageRef = doc(db, "settings", "systemMessage");
+
+        onSnapshot(systemMessageRef, (doc) => {
+            if (doc.exists()) {
+                const systemMessage = doc.data().message;
+                document.getElementById("system-message").textContent = systemMessage;
+            }
+        });
+
+        // Fetch user data based on UID
+        async function fetchUserData(uid) {
+            const userRef = doc(db, "users", uid);
+            const docSnap = await getDoc(userRef);
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                document.getElementById("user-name").textContent = `Hi, ${userData.name}`;
+                document.getElementById("user-balance").textContent = `₦${userData.balance.toFixed(2)}`;
+            } else {
+                console.log("No such user document!");
+            }
+        }
+
+        // Authentication listener to fetch user data
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await fetchUserData(user.uid);
+            } else {
+                window.location.href = "login.html"; // Redirect to login if not signed in
+            }
+        });
+
+        // Toggle balance visibility
+        function toggleBalance() {
+            const balanceInfo = document.getElementById("balance-info");
+            balanceInfo.style.display = balanceInfo.style.display === "none" ? "block" : "none";
+        }
+
+        // Redirect to a specific page
+        function redirectToPage(page) {
+            window.location.href = page;
+        }
+
+        // Redirect to add money page
+        function redirectToAddMoney() {
+            window.location.href = 'addMoney.html';
+        }
+
+        // Redirect to transaction history
+        function redirectToHistory() {
+            window.location.href = 'transactionHistory.html';
+        }
+
+        // Refresh the page
+        function refreshPage() {
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
