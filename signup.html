@@ -95,17 +95,6 @@
       color: #777;
     }
 
-    .social-media-select {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .social-media-select label {
-      font-size: 12px;
-      margin-right: 10px;
-    }
-
     .message {
       color: red;
       font-size: 12px;
@@ -164,7 +153,7 @@
       <button type="submit">Sign Up</button>
     </form>
     <div class="footer">
-      <p>© 2022 VBankMFV. All rights reserved.</p>
+      <p>© 2024 VBankMFV. All rights reserved.</p>
       <p>Already have an account? <a href="login.html">Sign in here</a></p>
     </div>
   </div>
@@ -172,9 +161,8 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
     // Firebase config
     const firebaseConfig = {
@@ -187,6 +175,7 @@
       measurementId: "G-G37D2FP82T"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
@@ -199,7 +188,7 @@
     const emailMessage = document.getElementById('email-message');
     const phoneMessage = document.getElementById('phone-message');
 
-    // Real-time Firestore checks
+    // Real-time Firestore checks for duplicate fields
     const checkIfExists = async (field, value, messageElement) => {
       const fieldQuery = query(collection(db, "users"), where(field, "==", value));
       const snapshot = await getDocs(fieldQuery);
@@ -213,7 +202,7 @@
       }
     };
 
-    // Event listeners for real-time checking
+    // Event listeners for real-time checking while typing
     usernameInput.addEventListener('input', () => {
       checkIfExists("username", usernameInput.value, usernameMessage);
     });
@@ -233,11 +222,13 @@
       const phone = phoneInput.value;
       const username = usernameInput.value;
 
+      // Check for valid phone number
       if (phone.length !== 11 || !phone.startsWith('0')) {
         phoneMessage.textContent = "Phone number must be 11 digits and start with 0.";
         return;
       }
 
+      // Check if email, phone, or username already exists in Firestore
       const emailExists = await checkIfExists("email", email, emailMessage);
       const phoneExists = await checkIfExists("phone", phone, phoneMessage);
       const usernameExists = await checkIfExists("username", username, usernameMessage);
@@ -253,6 +244,7 @@
       }
 
       try {
+        // Create the user account with email and password
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
@@ -268,6 +260,7 @@
           uid: user.uid,
         });
 
+        // Redirect to account page after successful sign-up
         window.location.href = "account.html";
       } catch (error) {
         console.error("Error signing up: ", error);
