@@ -288,12 +288,11 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        
-        // Your web app's Firebase configuration
+
+        // Your Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -309,13 +308,13 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to fetch balance, username, and system message for logged-in user
+        // Fetch balance, username, and system message
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
                 const userRef = doc(db, "users", uid);
                 const docSnap = await getDoc(userRef);
-                
+
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
@@ -324,14 +323,14 @@
                     console.log("No such user data!");
                 }
             } else {
-                // User is not signed in
+                // Redirect to login page if the user is not signed in
                 window.location.href = "login.html";
             }
 
             // Fetch system-wide message for all users
             const systemMessageRef = doc(db, "system", "message");
             const messageSnap = await getDoc(systemMessageRef);
-            
+
             if (messageSnap.exists()) {
                 document.getElementById('systemMessage').innerText = messageSnap.data().message;
             } else {
