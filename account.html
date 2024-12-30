@@ -291,7 +291,7 @@
         // Import the necessary Firebase SDK functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -309,22 +309,36 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
+        // Function to create balance for new user
+        async function createUserBalance(uid) {
+            const userRef = doc(db, "users", uid);
+            const userSnap = await getDoc(userRef);
+            
+            if (!userSnap.exists()) {
+                // Create balance document for new user
+                await setDoc(userRef, {
+                    balance: 0,
+                    username: "User"
+                });
+            }
+        }
+
         // Fetch and display user information
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
+                await createUserBalance(uid);
+
                 const userRef = doc(db, "users", uid);
+                const docSnap = await getDoc(userRef);
                 
-                // Real-time listener for user balance
-                onSnapshot(userRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        document.getElementById('userName').innerText = userData.username || "User";
-                        document.getElementById('userBalance').innerText = "₦" + userData.balance;
-                    } else {
-                        console.log("No user data found.");
-                    }
-                });
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    document.getElementById('userName').innerText = userData.username || "User";
+                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
+                } else {
+                    console.log("No user data found.");
+                }
             } else {
                 window.location.href = "login.html";
             }
