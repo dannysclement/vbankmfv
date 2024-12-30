@@ -291,7 +291,7 @@
         // Import the necessary Firebase SDK functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         
         // Firebase configuration
         const firebaseConfig = {
@@ -314,21 +314,15 @@
             if (user) {
                 const uid = user.uid;
                 const userRef = doc(db, "users", uid);
-
-                // Check if user balance is already initialized, if not, add it
                 const docSnap = await getDoc(userRef);
-                if (!docSnap.exists()) {
-                    await setDoc(userRef, { balance: 0.00, username: user.displayName || "User" });
+                
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    document.getElementById('userName').innerText = userData.username || "User";
+                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
+                } else {
+                    console.log("No user data found.");
                 }
-
-                // Real-time listener for balance updates
-                onSnapshot(userRef, (doc) => {
-                    if (doc.exists()) {
-                        const userData = doc.data();
-                        document.getElementById('userName').innerText = userData.username || "User";
-                        document.getElementById('userBalance').innerText = "₦" + userData.balance.toFixed(2);
-                    }
-                });
             } else {
                 window.location.href = "login.html";
             }
