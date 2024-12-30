@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard</title>
+    <title>Compact Dashboard</title>
     <style>
         /* Global Styles */
         body {
@@ -15,117 +15,95 @@
         }
 
         .container {
-            padding: 20px;
-            max-width: 500px;
-            margin: auto;
+            padding: 10px;
         }
 
         /* Header Section */
         .header {
             background-color: #1c1c1c;
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 5px;
+            padding: 10px;
             text-align: center;
-            margin-bottom: 20px;
         }
 
         .header h1 {
-            font-size: 18px;
+            font-size: 14px;
             margin: 0;
         }
 
         .header p {
-            font-size: 12px;
+            font-size: 10px;
             margin: 5px 0;
         }
 
         /* Balance Card */
         .balance-card {
             background-color: #6a1b9a;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
+            border-radius: 5px;
+            padding: 10px;
+            color: white;
             text-align: center;
-        }
-
-        .balance-card h2 {
-            font-size: 16px;
-            margin: 0;
-        }
-
-        .balance-card .balance {
-            font-size: 24px;
             margin: 10px 0;
         }
 
-        .balance-card button {
+        .balance-card h2 {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .balance-card h3 {
+            font-size: 16px;
+            margin: 5px 0 10px 0;
+        }
+
+        .balance-card .add-money {
             background-color: black;
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 8px 12px;
+            padding: 5px;
             cursor: pointer;
-            margin-top: 10px;
             font-size: 12px;
         }
 
-        .balance-card button:hover {
+        .balance-card .add-money:hover {
             background-color: #3700b3;
-        }
-
-        /* Money Transfer Section */
-        .money-transfer {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .money-transfer div {
-            background-color: #1c1c1c;
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            flex: 1;
-            margin: 0 5px;
-            font-size: 12px;
-        }
-
-        .money-transfer div img {
-            width: 30px;
-            margin-bottom: 5px;
         }
 
         /* Services Section */
         .services {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 5px;
             font-size: 10px;
+            justify-content: center;
         }
 
         .service-item {
             background-color: #1c1c1c;
-            border-radius: 10px;
-            padding: 10px;
+            border-radius: 5px;
+            padding: 8px;
             text-align: center;
-            flex: 1 0 21%;
+            width: 30%;
             box-sizing: border-box;
         }
 
         .service-item img {
-            width: 30px;
+            width: 25px;
             margin-bottom: 5px;
         }
 
-        /* Scrollable Footer Section */
+        .service-item p {
+            margin: 0;
+        }
+
+        /* Footer Section */
         .footer {
             background-color: #1c1c1c;
-            padding: 10px;
+            padding: 5px;
             position: fixed;
             bottom: 0;
             width: 100%;
-            overflow-x: auto;
-            white-space: nowrap;
             display: flex;
             justify-content: space-around;
         }
@@ -158,31 +136,14 @@
         <!-- Header Section -->
         <div class="header">
             <h1 id="userName">Loading...</h1>
-            <p>Welcome to your account!</p>
-            <p>📢 Enjoy seamless transactions with your balance.</p>
+            <p>Welcome to your compact dashboard!</p>
         </div>
 
         <!-- Balance Section -->
         <div class="balance-card">
             <h2>Balance</h2>
-            <p class="balance" id="userBalance">₦0.00</p>
-            <button onclick="window.location.href='addfund.html'">Add Money</button>
-        </div>
-
-        <!-- Money Transfer Section -->
-        <div class="money-transfer">
-            <div onclick="window.location.href='bank.html'">
-                <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="Bank">
-                <p>To Bank</p>
-            </div>
-            <div onclick="window.location.href='palmPay.html'">
-                <img src="https://img.icons8.com/color/48/palm-tree.png" alt="PalmPay">
-                <p>To PalmPay</p>
-            </div>
-            <div onclick="window.location.href='withdraw.html'">
-                <img src="https://img.icons8.com/color/48/cash-in-hand.png" alt="Withdraw">
-                <p>Withdraw</p>
-            </div>
+            <h3 id="userBalance">₦0.00</h3>
+            <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
         </div>
 
         <!-- Services Section -->
@@ -195,10 +156,6 @@
                 <img src="https://img.icons8.com/color/48/internet.png" alt="Data">
                 <p>Data</p>
             </div>
-            <div class="service-item" onclick="window.location.href='betting.html'">
-                <img src="https://cdn-icons-png.flaticon.com/512/8893/8893296.png" alt="Betting Fund">
-                <p>Betting Fund</p>
-            </div>
             <div class="service-item" onclick="window.location.href='electricity.html'">
                 <img src="https://img.icons8.com/color/48/electricity.png" alt="Electricity">
                 <p>Electricity</p>
@@ -207,34 +164,14 @@
                 <img src="https://img.icons8.com/color/48/tv.png" alt="TV">
                 <p>TV</p>
             </div>
-            <div class="service-item" onclick="window.location.href='winBig.html'">
-                <img src="https://img.icons8.com/color/48/cash-register.png" alt="Win Big">
-                <p>Win Big</p>
-            </div>
-            <div class="service-item" onclick="window.location.href='referEarn.html'">
-                <img src="https://img.icons8.com/color/48/gift.png" alt="Refer & Earn">
-                <p>Refer & Earn</p>
-            </div>
-            <div class="service-item" onclick="window.location.href='atmCard.html'">
-                <img src="https://img.icons8.com/color/48/card-in-use.png" alt="ATM Card">
-                <p>ATM Card</p>
-            </div>
         </div>
     </div>
 
-    <!-- Scrollable Footer Section -->
+    <!-- Footer Section -->
     <div class="footer">
         <button onclick="window.location.href='home.html'">
             <img src="https://img.icons8.com/ios-filled/50/home.png" alt="Home">
             <span>Home</span>
-        </button>
-        <button onclick="window.location.href='loan.html'">
-            <img src="https://cdn-icons-png.flaticon.com/512/2058/2058198.png" alt="Loan">
-            <span>Loan</span>
-        </button>
-        <button onclick="window.location.href='wealth.html'">
-            <img src="https://img.icons8.com/ios-filled/50/bar-chart.png" alt="Wealth">
-            <span>Wealth</span>
         </button>
         <button onclick="window.location.href='reward.html'">
             <img src="https://img.icons8.com/ios-filled/50/gift.png" alt="Reward">
@@ -248,10 +185,12 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        
+
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -262,10 +201,12 @@
             measurementId: "G-G37D2FP82T"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getFirestore(app);
 
+        // Fetch and auto-update balance
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
@@ -274,31 +215,25 @@
 
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
+                    const balance = userData.balance || 0.00;
+
                     document.getElementById('userName').innerText = userData.username || "User";
-                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
+                    document.getElementById('userBalance').innerText = "₦" + balance.toFixed(2);
+
+                    // Simulate balance auto-update (example: adding ₦50 every 10 seconds)
+                    setInterval(async () => {
+                        const newBalance = balance + 50;
+                        await updateDoc(userRef, { balance: newBalance });
+                        document.getElementById('userBalance').innerText = "₦" + newBalance.toFixed(2);
+                    }, 10000); // Updates every 10 seconds
                 } else {
-                    console.log("No such user data!");
+                    console.log("No such user data found!");
                 }
             } else {
+                // Redirect if not logged in
                 window.location.href = "login.html";
             }
         });
-
-        // Update balance in Firestore whenever user adds money
-        async function updateBalance(amount) {
-            const user = auth.currentUser;
-            if (user) {
-                const uid = user.uid;
-                const userRef = doc(db, "users", uid);
-                const userDoc = await getDoc(userRef);
-                
-                if (userDoc.exists()) {
-                    const newBalance = userDoc.data().balance + amount;
-                    await updateDoc(userRef, { balance: newBalance });
-                    document.getElementById('userBalance').innerText = "₦" + newBalance;
-                }
-            }
-        }
     </script>
 </body>
 </html>
