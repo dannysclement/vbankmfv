@@ -15,19 +15,22 @@
         }
 
         .container {
-            padding: 15px;
+            padding: 20px;
+            max-width: 500px;
+            margin: auto;
         }
 
         /* Header Section */
         .header {
             background-color: #1c1c1c;
             border-radius: 10px;
-            padding: 10px;
-            position: relative;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
         }
 
         .header h1 {
-            font-size: 16px;
+            font-size: 18px;
             margin: 0;
         }
 
@@ -40,9 +43,9 @@
         .balance-card {
             background-color: #6a1b9a;
             border-radius: 10px;
-            padding: 10px;
-            color: white;
-            margin: 15px 0;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .balance-card h2 {
@@ -50,25 +53,23 @@
             margin: 0;
         }
 
-        .balance-card .transaction-history {
-            font-size: 12px;
-            text-decoration: underline;
-            cursor: pointer;
-            margin-top: 10px;
+        .balance-card .balance {
+            font-size: 24px;
+            margin: 10px 0;
         }
 
-        .balance-card .add-money {
+        .balance-card button {
             background-color: black;
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 5px 10px;
+            padding: 8px 12px;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 12px;
         }
 
-        .balance-card .add-money:hover {
+        .balance-card button:hover {
             background-color: #3700b3;
         }
 
@@ -76,7 +77,7 @@
         .money-transfer {
             display: flex;
             justify-content: space-between;
-            margin: 15px 0;
+            margin-bottom: 20px;
         }
 
         .money-transfer div {
@@ -92,32 +93,6 @@
         .money-transfer div img {
             width: 30px;
             margin-bottom: 5px;
-        }
-
-        /* Reward Section */
-        .reward-section {
-            background-color: #1c1c1c;
-            border-radius: 10px;
-            margin: 15px 0;
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-        }
-
-        .reward-section button {
-            background-color: #6a1b9a;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 15px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .reward-section button:hover {
-            background-color: #3700b3;
         }
 
         /* Services Section */
@@ -183,16 +158,15 @@
         <!-- Header Section -->
         <div class="header">
             <h1 id="userName">Loading...</h1>
-            <p>Welcome, let's make payments!</p>
-            <p>📢 Recipient will be charged ₦50 of the EMTL...</p>
+            <p>Welcome to your account!</p>
+            <p>📢 Enjoy seamless transactions with your balance.</p>
         </div>
 
         <!-- Balance Section -->
         <div class="balance-card">
             <h2>Balance</h2>
-            <h3 id="userBalance">₦0.00</h3>
-            <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
-            <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
+            <p class="balance" id="userBalance">₦0.00</p>
+            <button onclick="window.location.href='addfund.html'">Add Money</button>
         </div>
 
         <!-- Money Transfer Section -->
@@ -209,12 +183,6 @@
                 <img src="https://img.icons8.com/color/48/cash-in-hand.png" alt="Withdraw">
                 <p>Withdraw</p>
             </div>
-        </div>
-
-        <!-- Reward Section -->
-        <div class="reward-section">
-            <p>₦200,000 Daily Login Reward! Claim your daily Trial Cash.</p>
-            <button onclick="window.location.href='reward.html'">Claim</button>
         </div>
 
         <!-- Services Section -->
@@ -280,12 +248,10 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -296,18 +262,16 @@
             measurementId: "G-G37D2FP82T"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to fetch balance and username for logged-in user
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
                 const userRef = doc(db, "users", uid);
                 const docSnap = await getDoc(userRef);
-                
+
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
@@ -316,10 +280,25 @@
                     console.log("No such user data!");
                 }
             } else {
-                // User is not signed in
                 window.location.href = "login.html";
             }
         });
+
+        // Update balance in Firestore whenever user adds money
+        async function updateBalance(amount) {
+            const user = auth.currentUser;
+            if (user) {
+                const uid = user.uid;
+                const userRef = doc(db, "users", uid);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    const newBalance = userDoc.data().balance + amount;
+                    await updateDoc(userRef, { balance: newBalance });
+                    document.getElementById('userBalance').innerText = "₦" + newBalance;
+                }
+            }
+        }
     </script>
 </body>
 </html>
