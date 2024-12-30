@@ -43,7 +43,6 @@
             padding: 10px;
             color: white;
             margin: 15px 0;
-            position: relative;
         }
 
         .balance-card h2 {
@@ -52,12 +51,10 @@
         }
 
         .balance-card .transaction-history {
-            position: absolute;
-            top: 10px;
-            right: 10px;
             font-size: 12px;
             text-decoration: underline;
             cursor: pointer;
+            margin-top: 10px;
         }
 
         .balance-card .add-money {
@@ -73,19 +70,6 @@
 
         .balance-card .add-money:hover {
             background-color: #3700b3;
-        }
-
-        .balance-card .toggle-balance {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            cursor: pointer;
-            font-size: 18px;
-        }
-
-        .balance-info {
-            display: none;
-            margin-top: 10px;
         }
 
         /* Money Transfer Section */
@@ -205,15 +189,10 @@
 
         <!-- Balance Section -->
         <div class="balance-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 id="balance">*****</h2>
-                <span class="toggle-balance" onclick="toggleBalance()">&#9660;</span> <!-- Toggle icon -->
-            </div>
-            <div class="balance-info" id="balance-info" style="display: none;">
-                <h3 id="userBalance">₦0.00</h3>
-                <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
-                <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
-            </div>
+            <h2>Balance</h2>
+            <h3 id="userBalance">₦0.00</h3>
+            <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
+            <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
         </div>
 
         <!-- Money Transfer Section -->
@@ -306,7 +285,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         
-        // Firebase configuration
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -322,7 +301,7 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to fetch balance for logged-in user
+        // Function to fetch balance and username for logged-in user
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
@@ -330,10 +309,9 @@
                 const docSnap = await getDoc(userRef);
                 
                 if (docSnap.exists()) {
-                    const balance = docSnap.data().balance;
-                    document.getElementById('userName').innerText = user.displayName || "User";
-                    document.getElementById('balance').innerText = "₦" + balance;
-                    document.getElementById('userBalance').innerText = "₦" + balance;
+                    const userData = docSnap.data();
+                    document.getElementById('userName').innerText = userData.username || "User";
+                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
                 } else {
                     console.log("No such user data!");
                 }
@@ -342,19 +320,6 @@
                 window.location.href = "login.html";
             }
         });
-        
-        // Toggle balance visibility
-        function toggleBalance() {
-            const balanceInfo = document.getElementById('balance-info');
-            const icon = document.querySelector('.toggle-balance');
-            if (balanceInfo.style.display === 'none') {
-                balanceInfo.style.display = 'block';
-                icon.innerHTML = '&#9650;';  // Change to up arrow
-            } else {
-                balanceInfo.style.display = 'none';
-                icon.innerHTML = '&#9660;';  // Change to down arrow
-            }
-        }
     </script>
 </body>
 </html>
