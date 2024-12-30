@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrollable Dashboard</title>
+    <title>User Dashboard</title>
     <style>
         /* Global Styles */
         body {
@@ -198,35 +198,35 @@
     <div class="container">
         <!-- Header Section -->
         <div class="header">
-            <h1 id="user-name">Hi, Loading...</h1>
+            <h1 id="userName">Loading...</h1>
             <p>Welcome, let's make payments!</p>
-            <p id="system-message">📢 Loading message...</p> <!-- This will display the system message -->
+            <p>📢 Recipient will be charged ₦50 of the EMTL...</p>
         </div>
 
         <!-- Balance Section -->
         <div class="balance-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 id="user-balance">₦0.00</h2>
+                <h2 id="balance">*****</h2>
                 <span class="toggle-balance" onclick="toggleBalance()">&#9660;</span> <!-- Toggle icon -->
             </div>
             <div class="balance-info" id="balance-info" style="display: none;">
-                <h3 id="user-balance-info">₦50,000</h3>
-                <span class="transaction-history" onclick="redirectToHistory()">Transaction History</span>
-                <button class="add-money" onclick="redirectToAddMoney()">Add Money</button>
+                <h3 id="userBalance">₦0.00</h3>
+                <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
+                <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
             </div>
         </div>
 
         <!-- Money Transfer Section -->
         <div class="money-transfer">
-            <div onclick="redirectToPage('bank.html')">
+            <div onclick="window.location.href='bank.html'">
                 <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="Bank">
                 <p>To Bank</p>
             </div>
-            <div onclick="redirectToPage('palmPay.html')">
+            <div onclick="window.location.href='palmPay.html'">
                 <img src="https://img.icons8.com/color/48/palm-tree.png" alt="PalmPay">
                 <p>To PalmPay</p>
             </div>
-            <div onclick="redirectToPage('withdraw.html')">
+            <div onclick="window.location.href='withdraw.html'">
                 <img src="https://img.icons8.com/color/48/cash-in-hand.png" alt="Withdraw">
                 <p>Withdraw</p>
             </div>
@@ -234,41 +234,41 @@
 
         <!-- Reward Section -->
         <div class="reward-section">
-            <p id="reward-message">₦200,000 Daily Login Reward! Claim your daily Trial Cash.</p>
-            <button onclick="redirectToPage('reward.html')">Claim</button>
+            <p>₦200,000 Daily Login Reward! Claim your daily Trial Cash.</p>
+            <button onclick="window.location.href='reward.html'">Claim</button>
         </div>
 
         <!-- Services Section -->
         <div class="services">
-            <div class="service-item" onclick="redirectToPage('airtime.html')">
+            <div class="service-item" onclick="window.location.href='airtime.html'">
                 <img src="https://img.icons8.com/color/48/phone.png" alt="Airtime">
                 <p>Airtime</p>
             </div>
-            <div class="service-item" onclick="redirectToPage('data.html')">
+            <div class="service-item" onclick="window.location.href='data.html'">
                 <img src="https://img.icons8.com/color/48/internet.png" alt="Data">
                 <p>Data</p>
             </div>
-            <div class="service-item" onclick="redirectToPage('betting.html')">
+            <div class="service-item" onclick="window.location.href='betting.html'">
                 <img src="https://cdn-icons-png.flaticon.com/512/8893/8893296.png" alt="Betting Fund">
                 <p>Betting Fund</p>
             </div>
-            <div class="service-item" onclick="redirectToPage('electricity.html')">
+            <div class="service-item" onclick="window.location.href='electricity.html'">
                 <img src="https://img.icons8.com/color/48/electricity.png" alt="Electricity">
                 <p>Electricity</p>
             </div>
-            <div class="service-item" onclick="redirectToPage('tv.html')">
+            <div class="service-item" onclick="window.location.href='tv.html'">
                 <img src="https://img.icons8.com/color/48/tv.png" alt="TV">
                 <p>TV</p>
             </div>
-            <div class="service-item" onclick="redirectToPage('winBig.html')">
+            <div class="service-item" onclick="window.location.href='winBig.html'">
                 <img src="https://img.icons8.com/color/48/cash-register.png" alt="Win Big">
                 <p>Win Big</p>
             </div>
-            <div class="service-item" onclick="redirectToPage('referEarn.html')">
+            <div class="service-item" onclick="window.location.href='referEarn.html'">
                 <img src="https://img.icons8.com/color/48/gift.png" alt="Refer & Earn">
                 <p>Refer & Earn</p>
             </div>
-            <div class="service-item" onclick="redirectToPage('atmCard.html')">
+            <div class="service-item" onclick="window.location.href='atmCard.html'">
                 <img src="https://img.icons8.com/color/48/card-in-use.png" alt="ATM Card">
                 <p>ATM Card</p>
             </div>
@@ -277,36 +277,37 @@
 
     <!-- Scrollable Footer Section -->
     <div class="footer">
-        <button onclick="refreshPage()">
+        <button onclick="window.location.href='home.html'">
             <img src="https://img.icons8.com/ios-filled/50/home.png" alt="Home">
             <span>Home</span>
         </button>
-        <button onclick="redirectToPage('loan.html')">
+        <button onclick="window.location.href='loan.html'">
             <img src="https://cdn-icons-png.flaticon.com/512/2058/2058198.png" alt="Loan">
             <span>Loan</span>
         </button>
-        <button onclick="redirectToPage('wealth.html')">
+        <button onclick="window.location.href='wealth.html'">
             <img src="https://img.icons8.com/ios-filled/50/bar-chart.png" alt="Wealth">
             <span>Wealth</span>
         </button>
-        <button onclick="redirectToPage('reward.html')">
+        <button onclick="window.location.href='reward.html'">
             <img src="https://img.icons8.com/ios-filled/50/gift.png" alt="Reward">
             <span>Reward</span>
         </button>
-        <button onclick="redirectToPage('me.html')">
+        <button onclick="window.location.href='me.html'">
             <img src="https://img.icons8.com/ios-filled/50/user.png" alt="Me">
             <span>Me</span>
         </button>
     </div>
 
+    <!-- Firebase SDKs -->
     <script type="module">
-        // Import Firebase SDK
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        // TODO: Add SDKs for Firebase products that you want to use
 
-        // Firebase Configuration
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -319,66 +320,41 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
         const db = getFirestore(app);
-        const auth = getAuth(app);
-        const analytics = getAnalytics(app);
 
-        // Fetch system message in real-time
-        const systemMessageRef = doc(db, "settings", "systemMessage");
-
-        onSnapshot(systemMessageRef, (doc) => {
-            if (doc.exists()) {
-                const systemMessage = doc.data().message;
-                document.getElementById("system-message").textContent = systemMessage;
-            }
-        });
-
-        // Fetch user data based on UID
-        async function fetchUserData(uid) {
-            const userRef = doc(db, "users", uid);
-            const docSnap = await getDoc(userRef);
-            if (docSnap.exists()) {
-                const userData = docSnap.data();
-                document.getElementById("user-name").textContent = `Hi, ${userData.name}`;
-                document.getElementById("user-balance").textContent = `₦${userData.balance.toFixed(2)}`;
-            } else {
-                console.log("No such user document!");
-            }
-        }
-
-        // Authentication listener to fetch user data
+        // Function to fetch balance for logged-in user
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                await fetchUserData(user.uid);
+                const uid = user.uid;
+                const userRef = doc(db, "users", uid);
+                const docSnap = await getDoc(userRef);
+                
+                if (docSnap.exists()) {
+                    const balance = docSnap.data().balance;
+                    document.getElementById('userName').innerText = user.displayName || "User";
+                    document.getElementById('balance').innerText = "₦" + balance;
+                    document.getElementById('userBalance').innerText = "₦" + balance;
+                } else {
+                    console.log("No such user data!");
+                }
             } else {
-                window.location.href = "login.html"; // Redirect to login if not signed in
+                // User is not signed in
+                window.location.href = "login.html";
             }
         });
-
+        
         // Toggle balance visibility
         function toggleBalance() {
-            const balanceInfo = document.getElementById("balance-info");
-            balanceInfo.style.display = balanceInfo.style.display === "none" ? "block" : "none";
-        }
-
-        // Redirect to a specific page
-        function redirectToPage(page) {
-            window.location.href = page;
-        }
-
-        // Redirect to add money page
-        function redirectToAddMoney() {
-            window.location.href = 'addMoney.html';
-        }
-
-        // Redirect to transaction history
-        function redirectToHistory() {
-            window.location.href = 'transactionHistory.html';
-        }
-
-        // Refresh the page
-        function refreshPage() {
-            window.location.reload();
+            const balanceInfo = document.getElementById('balance-info');
+            const icon = document.querySelector('.toggle-balance');
+            if (balanceInfo.style.display === 'none') {
+                balanceInfo.style.display = 'block';
+                icon.innerHTML = '&#9650;';  // Change to up arrow
+            } else {
+                balanceInfo.style.display = 'none';
+                icon.innerHTML = '&#9660;';  // Change to down arrow
+            }
         }
     </script>
 </body>
