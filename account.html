@@ -192,7 +192,7 @@
         <div class="header">
             <h1 id="userName">Loading...</h1>
             <p>Welcome, let's make payments!</p>
-            <p id="systemMessage">Loading system message...</p>
+            <p id="systemMessage" class="system-message">📢 Loading message...</p>
         </div>
 
         <!-- Balance Section -->
@@ -205,9 +205,9 @@
 
         <!-- Money Transfer Section -->
         <div class="money-transfer">
-            <div onclick="window.location.href='bank.html'">
-                <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="Bank">
-                <p>To Bank</p>
+            <div onclick="window.location.href='vbankmfv.html'">
+                <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="VBANKMFV">
+                <p>To VBANKMFV</p>
             </div>
             <div onclick="window.location.href='palmPay.html'">
                 <img src="https://img.icons8.com/color/48/palm-tree.png" alt="PalmPay">
@@ -309,7 +309,7 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to fetch system-wide message and user balance/username
+        // Function to fetch balance, username, and system message for logged-in user
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
@@ -323,16 +323,19 @@
                 } else {
                     console.log("No such user data!");
                 }
-
-                // Fetch the system message
-                const systemMessageRef = doc(db, "systemMessages", "message1"); // Assuming one message is stored
-                const systemMessageSnap = await getDoc(systemMessageRef);
-                if (systemMessageSnap.exists()) {
-                    document.getElementById('systemMessage').innerText = systemMessageSnap.data().message;
-                }
             } else {
                 // User is not signed in
                 window.location.href = "login.html";
+            }
+
+            // Fetch system-wide message for all users
+            const systemMessageRef = doc(db, "system", "message");
+            const messageSnap = await getDoc(systemMessageRef);
+            
+            if (messageSnap.exists()) {
+                document.getElementById('systemMessage').innerText = messageSnap.data().message;
+            } else {
+                console.log("No system message found!");
             }
         });
     </script>
