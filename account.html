@@ -16,19 +16,20 @@
 
         .container {
             padding: 10px;
+            font-size: 12px;
         }
 
         /* Header Section */
         .header {
             background-color: #1c1c1c;
             border-radius: 10px;
-            padding: 8px;
+            padding: 10px;
             position: relative;
-            text-align: center;
         }
 
         .header h1 {
             font-size: 14px;
+            font-weight: bold;
             margin: 0;
         }
 
@@ -41,10 +42,10 @@
         .balance-card {
             background-color: #6a1b9a;
             border-radius: 10px;
-            padding: 10px;
+            padding: 8px;
             color: white;
             margin: 10px 0;
-            text-align: center;
+            font-weight: bold;
         }
 
         .balance-card h2 {
@@ -53,7 +54,7 @@
         }
 
         .balance-card h3 {
-            font-size: 18px;
+            font-size: 16px;
             margin: 5px 0;
         }
 
@@ -69,7 +70,7 @@
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 5px 10px;
+            padding: 4px 8px;
             cursor: pointer;
             margin-top: 10px;
             font-size: 10px;
@@ -88,7 +89,7 @@
 
         .money-transfer div {
             background-color: #1c1c1c;
-            padding: 10px;
+            padding: 8px;
             border-radius: 10px;
             text-align: center;
             flex: 1;
@@ -97,7 +98,7 @@
         }
 
         .money-transfer div img {
-            width: 25px;
+            width: 30px;
             margin-bottom: 5px;
         }
 
@@ -118,7 +119,7 @@
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 6px 12px;
+            padding: 5px 12px;
             cursor: pointer;
             font-size: 10px;
         }
@@ -131,7 +132,7 @@
         .services {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 8px;
             font-size: 8px;
         }
 
@@ -191,7 +192,7 @@
         <div class="header">
             <h1 id="userName">Loading...</h1>
             <p>Welcome, let's make payments!</p>
-            <p>📢 Recipient will be charged ₦50 of the EMTL...</p>
+            <p id="systemMessage">Loading system message...</p>
         </div>
 
         <!-- Balance Section -->
@@ -308,7 +309,7 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to fetch balance and username for logged-in user
+        // Function to fetch system-wide message and user balance/username
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
@@ -321,6 +322,13 @@
                     document.getElementById('userBalance').innerText = "₦" + userData.balance;
                 } else {
                     console.log("No such user data!");
+                }
+
+                // Fetch the system message
+                const systemMessageRef = doc(db, "systemMessages", "message1"); // Assuming one message is stored
+                const systemMessageSnap = await getDoc(systemMessageRef);
+                if (systemMessageSnap.exists()) {
+                    document.getElementById('systemMessage').innerText = systemMessageSnap.data().message;
                 }
             } else {
                 // User is not signed in
