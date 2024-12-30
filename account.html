@@ -200,7 +200,7 @@
             <h2>Balance</h2>
             <h3 id="userBalance">₦0.00</h3>
             <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
-            <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
+            <button class="add-money" onclick="addFunds()">Add Money</button>
         </div>
 
         <!-- Money Transfer Section -->
@@ -288,11 +288,12 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
+        // Import the functions you need from the SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-
-        // Your Firebase configuration
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -308,7 +309,7 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Fetch balance, username, and system message
+        // Function to fetch user data and balance
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
@@ -318,16 +319,18 @@
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
-                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
+                    const balance = userData.balance || 0.00;
+                    document.getElementById('userBalance').innerText = `₦${balance.toFixed(2)}`;
                 } else {
                     console.log("No such user data!");
+                    document.getElementById('userBalance').innerText = "₦0.00";
                 }
             } else {
-                // Redirect to login page if the user is not signed in
+                // Redirect if no user is logged in
                 window.location.href = "login.html";
             }
 
-            // Fetch system-wide message for all users
+            // Fetch system message
             const systemMessageRef = doc(db, "system", "message");
             const messageSnap = await getDoc(systemMessageRef);
 
@@ -337,6 +340,24 @@
                 console.log("No system message found!");
             }
         });
+
+        // Function to handle adding funds
+        async function addFunds() {
+            const user = auth.currentUser;
+            if (user) {
+                const userRef = doc(db, "users", user.uid);
+                await updateDoc(userRef, {
+                    balance: 1000.00 // Update with new balance logic as needed
+                });
+
+                // Refresh balance after updating
+                const updatedDoc = await getDoc(userRef);
+                const updatedData = updatedDoc.data();
+                document.getElementById('userBalance').innerText = `₦${updatedData.balance.toFixed(2)}`;
+            } else {
+                console.log("No user logged in.");
+            }
+        }
     </script>
 </body>
 </html>
