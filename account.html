@@ -288,10 +288,12 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
+        // Import the necessary Firebase SDK functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -312,6 +314,8 @@
             if (user) {
                 const uid = user.uid;
                 const userRef = doc(db, "users", uid);
+
+                // Fetch user data from Firestore
                 const docSnap = await getDoc(userRef);
                 
                 if (docSnap.exists()) {
@@ -321,18 +325,18 @@
                 } else {
                     console.log("No user data found.");
                 }
+
+                // Fetch and display system-wide message
+                const systemMessageRef = doc(db, "system", "message");
+                const messageSnap = await getDoc(systemMessageRef);
+                
+                if (messageSnap.exists()) {
+                    document.getElementById('systemMessage').innerText = messageSnap.data().message;
+                } else {
+                    console.log("No system message found.");
+                }
             } else {
                 window.location.href = "login.html";
-            }
-
-            // Fetch and display system-wide message
-            const systemMessageRef = doc(db, "system", "message");
-            const messageSnap = await getDoc(systemMessageRef);
-            
-            if (messageSnap.exists()) {
-                document.getElementById('systemMessage').innerText = messageSnap.data().message;
-            } else {
-                console.log("No system message found.");
             }
         });
     </script>
