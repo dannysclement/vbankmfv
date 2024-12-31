@@ -288,12 +288,11 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        
-        // Your web app's Firebase configuration
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -309,32 +308,35 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Handle user sign-up and login
-        async function signUp(email, password, username) {
+        // Handle User Signup
+        async function signUp(email, password) {
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                const userRef = doc(db, "users", user.uid);
-                await setDoc(userRef, {
-                    username: username,
-                    balance: 0.00
+
+                // Create Firestore document for the user
+                await setDoc(doc(db, "users", user.uid), {
+                    username: user.email.split('@')[0],  // Default username
+                    balance: 50  // Credit user with 50
                 });
-                console.log("User signed up and balance initialized.");
+
+                alert("Signup successful!");
             } catch (error) {
-                console.error("Error signing up: ", error.message);
+                console.error("Error signing up: ", error);
             }
         }
 
+        // Handle User Login
         async function login(email, password) {
             try {
                 await signInWithEmailAndPassword(auth, email, password);
-                console.log("User logged in successfully.");
+                alert("Login successful!");
             } catch (error) {
-                console.error("Error logging in: ", error.message);
+                console.error("Error logging in: ", error);
             }
         }
 
-        // Function to fetch user balance and update UI
+        // Fetch user details
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
@@ -344,7 +346,7 @@
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
-                    document.getElementById('userBalance').innerText = "₦" + userData.balance.toFixed(2);
+                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
                 } else {
                     console.log("No such user data!");
                 }
@@ -353,16 +355,15 @@
                 window.location.href = "login.html";
             }
 
-            // Fetch system-wide message for all users
-            const systemMessageRef = doc(db, "system", "message");
-            const messageSnap = await getDoc(systemMessageRef);
-            
-            if (messageSnap.exists()) {
-                document.getElementById('systemMessage').innerText = messageSnap.data().message;
-            } else {
-                console.log("No system message found!");
-            }
+            // Update balance in real-time
+            const userRef = doc(db, "users", user.uid);
+            onSnapshot(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    document.getElementById('userBalance').innerText = "₦" + snapshot.data().balance;
+                }
+            });
         });
+
     </script>
 </body>
 </html>
