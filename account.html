@@ -287,94 +287,88 @@
     </div>
 
     <!-- Firebase SDKs -->
-    <script // Import Firebase SDKs
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+    <script>
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
 
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
-    authDomain: "vbankmfv.firebaseapp.com",
-    projectId: "vbankmfv",
-    storageBucket: "vbankmfv.firebasestorage.app",
-    messagingSenderId: "920021461554",
-    appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
-    measurementId: "G-G37D2FP82T"
-};
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
+            authDomain: "vbankmfv.firebaseapp.com",
+            projectId: "vbankmfv",
+            storageBucket: "vbankmfv.firebasestorage.app",
+            messagingSenderId: "920021461554",
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+            measurementId: "G-G37D2FP82T"
+        };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth(app);
-const db = getFirestore(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-// Fetch User's Data from Firestore based on UID
-const fetchUserData = (userId) => {
-    const userDoc = doc(db, "users", userId);
+        // Fetch User's Data from Firestore based on UID
+        const fetchUserData = (userId) => {
+            const userDoc = doc(db, "users", userId);
 
-    onSnapshot(userDoc, (docSnapshot) => {
-        if (docSnapshot.exists()) {
-            const { balance, username } = docSnapshot.data();
-            // Update UI with fetched data
-            document.getElementById("userBalance").innerText = `₦${balance.toFixed(2)}`;
-            document.getElementById("username").innerText = `Hi, ${username}`;
-        } else {
-            // Initialize balance to 0 and default username if user does not exist
-            setDoc(userDoc, { balance: 0, username: "User" });
-            document.getElementById("userBalance").innerText = "₦0.00";
-            document.getElementById("username").innerText = "Hi, User";
-        }
-    });
-};
+            onSnapshot(userDoc, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const { balance, username } = docSnapshot.data();
+                    // Update UI with fetched data
+                    document.getElementById("userBalance").innerText = `₦${balance.toFixed(2)}`;
+                    document.getElementById("username").innerText = `Hi, ${username}`;
+                } else {
+                    // Initialize balance to 0 and default username if user does not exist
+                    setDoc(userDoc, { balance: 0, username: "User" });
+                    document.getElementById("userBalance").innerText = "₦0.00";
+                    document.getElementById("username").innerText = "Hi, User";
+                }
+            });
+        };
 
-// Fetch System Message from Firestore (Shared for all users)
-const fetchSystemMessage = () => {
-    const messageDoc = doc(db, "system", "message");
+        // Fetch System Message from Firestore (Shared for all users)
+        const fetchSystemMessage = () => {
+            const messageDoc = doc(db, "system", "message");
 
-    onSnapshot(messageDoc, (docSnapshot) => {
-        if (docSnapshot.exists()) {
-            const { message } = docSnapshot.data();
-            document.getElementById("systemMessage").innerText = message || "📢 Recipient will be charged ₦50 of the EMTL...";
-        } else {
-            // Initialize system message if it doesn't exist
-            setDoc(messageDoc, { message: "📢 Recipient will be charged ₦50 of the EMTL..." });
-            document.getElementById("systemMessage").innerText = "📢 Recipient will be charged ₦50 of the EMTL...";
-        }
-    });
-};
+            onSnapshot(messageDoc, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const { message } = docSnapshot.data();
+                    document.getElementById("systemMessage").innerText = message || "📢 Recipient will be charged ₦50 of the EMTL...";
+                } else {
+                    // Initialize system message if it doesn't exist
+                    setDoc(messageDoc, { message: "📢 Recipient will be charged ₦50 of the EMTL..." });
+                    document.getElementById("systemMessage").innerText = "📢 Recipient will be charged ₦50 of the EMTL...";
+                }
+            });
+        };
 
-// Log Out User
-const logOut = async () => {
-    try {
-        await signOut(auth);
-        alert("Logged out successfully!");
-        window.location.href = "login.html";
-    } catch (error) {
-        console.error("Error logging out:", error.message);
-    }
-};
+        // Log Out User
+        const logOut = async () => {
+            try {
+                await signOut(auth);
+                alert("Logged out successfully!");
+                window.location.href = "login.html";
+            } catch (error) {
+                console.error("Error logging out:", error.message);
+            }
+        };
 
-// Monitor Authentication State
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // Fetch the user's data and set up real-time listener
-        fetchUserData(user.uid);
-    } else {
-        alert("You must log in to access this page.");
-        window.location.href = "login.html";
-    }
-});
+        // Monitor Authentication State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Fetch the user's data and set up real-time listener
+                fetchUserData(user.uid);
+            } else {
+                alert("You must log in to access this page.");
+                window.location.href = "login.html";
+            }
+        });
 
-// Fetch system message listener
-fetchSystemMessage();
-
-// Attach Event Listener for Logout Button
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("logoutButton").addEventListener("click", logOut);
-});
-
+        // Fetch system message listener
+        fetchSystemMessage();
     </script>
 </body>
 </html>
