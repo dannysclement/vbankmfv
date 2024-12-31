@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -187,7 +186,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <!-- Header Section -->
@@ -290,12 +288,10 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        // Import necessary Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -311,27 +307,17 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to update the balance
-        function updateUserBalance(balance) {
-            const userBalanceElement = document.getElementById('userBalance');
-            if (balance !== undefined && balance !== null) {
-                userBalanceElement.innerText = "₦" + balance;
-            } else {
-                userBalanceElement.innerText = "₦0.00";
-            }
-        }
-
-        // Fetch user data and update balance
+        // Fetch and display user information
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
                 const userRef = doc(db, "users", uid);
                 const docSnap = await getDoc(userRef);
-
+                
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
-                    updateUserBalance(userData.balance);
+                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
                 } else {
                     console.log("No user data found.");
                 }
@@ -349,17 +335,6 @@
                 console.log("No system message found.");
             }
         });
-
-        // Function to update balance in Firestore
-        async function updateBalanceInFirestore(newBalance) {
-            const user = auth.currentUser;
-            if (user) {
-                const uid = user.uid;
-                const userRef = doc(db, "users", uid);
-                await setDoc(userRef, { balance: newBalance }, { merge: true });
-            }
-        }
     </script>
 </body>
-
 </html>
