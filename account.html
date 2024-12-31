@@ -314,10 +314,10 @@
         // Function to update the balance
         function updateUserBalance(balance) {
             const userBalanceElement = document.getElementById('userBalance');
-            if (balance <= 0) {
-                userBalanceElement.innerText = "₦0.00";
+            if (balance !== undefined && balance !== null) {
+                userBalanceElement.innerText = "₦" + balance;
             } else {
-                userBalanceElement.innerText = "₦" + balance.toFixed(2);
+                userBalanceElement.innerText = "₦0.00";
             }
         }
 
@@ -331,7 +331,7 @@
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
-                    updateUserBalance(userData.balance || 0); // Set balance to 0 if it's missing
+                    updateUserBalance(userData.balance);
                 } else {
                     console.log("No user data found.");
                 }
