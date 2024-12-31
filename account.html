@@ -200,7 +200,7 @@
             <h2>Balance</h2>
             <h3 id="userBalance">₦0.00</h3>
             <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
-            <button class="add-money" onclick="addFunds()">Add Money</button>
+            <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
         </div>
 
         <!-- Money Transfer Section -->
@@ -288,12 +288,10 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        // Import the necessary Firebase SDK functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        
-        // Firebase configuration
+        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -304,58 +302,40 @@
             measurementId: "G-G37D2FP82T"
         };
 
-        // Initialize Firebase app
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Fetch and display user information
+        // Function to fetch balance, username, and system message for logged-in user
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
                 const userRef = doc(db, "users", uid);
-                const docSnap = await getDoc(userRef);
-                
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    document.getElementById('userName').innerText = userData.username || "User";
-                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
-                } else {
-                    console.log("No user data found.");
-                }
+
+                // Real-time listener for user balance and username
+                onSnapshot(userRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        document.getElementById('userName').innerText = userData.username || "User";
+                        document.getElementById('userBalance').innerText = "₦" + userData.balance;
+                    } else {
+                        console.log("No such user data!");
+                    }
+                });
             } else {
                 window.location.href = "login.html";
             }
 
-            // Fetch and display system-wide message
+            // Fetch system-wide message for all users
             const systemMessageRef = doc(db, "system", "message");
             const messageSnap = await getDoc(systemMessageRef);
             
             if (messageSnap.exists()) {
                 document.getElementById('systemMessage').innerText = messageSnap.data().message;
             } else {
-                console.log("No system message found.");
+                console.log("No system message found!");
             }
         });
-
-        // Add Funds function
-        async function addFunds() {
-            const user = auth.currentUser;
-            if (user) {
-                const uid = user.uid;
-                const userRef = doc(db, "users", uid);
-                
-                // Add an arbitrary amount to the user's balance (for demo purposes, you can change it)
-                await updateDoc(userRef, {
-                    balance: firebase.firestore.FieldValue.increment(5000)
-                });
-
-                // Automatically update the balance on the dashboard
-                const userSnap = await getDoc(userRef);
-                const userData = userSnap.data();
-                document.getElementById('userBalance').innerText = "₦" + userData.balance;
-            }
-        }
     </script>
 </body>
 </html>
