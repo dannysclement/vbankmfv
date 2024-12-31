@@ -288,10 +288,11 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
+        // Import the necessary Firebase SDK functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
@@ -303,40 +304,12 @@
             measurementId: "G-G37D2FP82T"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase app
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Handle User Signup
-        async function signUp(email, password) {
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
-                // Create Firestore document for the user
-                await setDoc(doc(db, "users", user.uid), {
-                    username: user.email.split('@')[0],  // Default username
-                    balance: 50  // Credit user with 50
-                });
-
-                alert("Signup successful!");
-            } catch (error) {
-                console.error("Error signing up: ", error);
-            }
-        }
-
-        // Handle User Login
-        async function login(email, password) {
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                alert("Login successful!");
-            } catch (error) {
-                console.error("Error logging in: ", error);
-            }
-        }
-
-        // Fetch user details
+        // Fetch and display user information
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
@@ -347,23 +320,27 @@
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
                     document.getElementById('userBalance').innerText = "₦" + userData.balance;
+
+                    // Automatically update balance if needed (e.g., upon adding funds or transferring)
+                    const userBalanceElement = document.getElementById('userBalance');
+                    userBalanceElement.innerText = "₦" + userData.balance; 
                 } else {
-                    console.log("No such user data!");
+                    console.log("No user data found.");
                 }
             } else {
-                // User is not signed in
                 window.location.href = "login.html";
             }
 
-            // Update balance in real-time
-            const userRef = doc(db, "users", user.uid);
-            onSnapshot(userRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    document.getElementById('userBalance').innerText = "₦" + snapshot.data().balance;
-                }
-            });
+            // Fetch and display system-wide message
+            const systemMessageRef = doc(db, "system", "message");
+            const messageSnap = await getDoc(systemMessageRef);
+            
+            if (messageSnap.exists()) {
+                document.getElementById('systemMessage').innerText = messageSnap.data().message;
+            } else {
+                console.log("No system message found.");
+            }
         });
-
     </script>
 </body>
 </html>
