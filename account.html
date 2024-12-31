@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -187,7 +186,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <!-- Header Section -->
@@ -290,12 +288,12 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        // Import the necessary Firebase SDK functions
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         
-        // Firebase configuration
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -306,53 +304,46 @@
             measurementId: "G-G37D2FP82T"
         };
 
-        // Initialize Firebase app
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to create balance document if it doesn't exist
-        const createUserBalance = async (uid) => {
-            const userRef = doc(db, "users", uid);
-            const userDoc = await getDoc(userRef);
-            if (!userDoc.exists()) {
-                await setDoc(userRef, { balance: 0.00 });
-            }
-        };
-
-        // Fetch and display user information
+        // Function to fetch balance, username, and system message for logged-in user
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
-
-                // Create user balance document if not exists
-                await createUserBalance(uid);
-
                 const userRef = doc(db, "users", uid);
-                const unsubscribe = onSnapshot(userRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        document.getElementById('userName').innerText = userData.username || "User";
-                        document.getElementById('userBalance').innerText = "₦" + userData.balance.toFixed(2);
-                    } else {
-                        console.log("No user data found.");
-                    }
-                });
+                const docSnap = await getDoc(userRef);
+                
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    document.getElementById('userName').innerText = userData.username || "User";
+                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
+
+                    // Watch for real-time balance updates
+                    userRef.onSnapshot((snapshot) => {
+                        const updatedBalance = snapshot.data().balance;
+                        document.getElementById('userBalance').innerText = "₦" + updatedBalance;
+                    });
+                } else {
+                    console.log("No such user data!");
+                }
             } else {
+                // User is not signed in
                 window.location.href = "login.html";
             }
 
-            // Fetch and display system-wide message
+            // Fetch system-wide message for all users
             const systemMessageRef = doc(db, "system", "message");
             const messageSnap = await getDoc(systemMessageRef);
             
             if (messageSnap.exists()) {
                 document.getElementById('systemMessage').innerText = messageSnap.data().message;
             } else {
-                console.log("No system message found.");
+                console.log("No system message found!");
             }
         });
     </script>
 </body>
-
 </html>
