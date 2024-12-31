@@ -288,12 +288,10 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        // Import the necessary Firebase SDK functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -309,71 +307,46 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Register a new user
-        const signupForm = document.getElementById("signup-form");
-        signupForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const email = signupForm.email.value;
-            const password = signupForm.password.value;
-
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                const userRef = doc(db, "users", user.uid);
-                await setDoc(userRef, {
-                    username: user.displayName || "User",
-                    balance: 0
-                });
-                window.location.href = "account.html";
-            } catch (error) {
-                console.error(error);
-            }
-        });
-
-        // Log in existing user
-        const loginForm = document.getElementById("login-form");
-        loginForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const email = loginForm.email.value;
-            const password = loginForm.password.value;
-
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                window.location.href = "account.html";
-            } catch (error) {
-                console.error(error);
-            }
-        });
-
-        // Fetch and display user information on login
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const uid = user.uid;
-                const userRef = doc(db, "users", uid);
-                const docSnap = await getDoc(userRef);
-                
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    document.getElementById('userName').innerText = userData.username || "User";
-                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
+        // Real-time Firestore Listener for User Balance
+        const setUpRealTimeBalanceListener = (userId) => {
+            const userDoc = doc(db, "users", userId);
+            onSnapshot(userDoc, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const { balance } = docSnapshot.data();
+                    document.getElementById("userBalance").innerText = `₦${balance.toFixed(2)}`;
                 } else {
-                    console.log("No user data found.");
+                    // Initialize balance to 0 if user does not exist
+                    setDoc(userDoc, { balance: 0 });
+                    document.getElementById("userBalance").innerText = "₦0.00";
                 }
+            });
+        };
+
+        // Log Out User
+        const logOut = async () => {
+            try {
+                await signOut(auth);
+                alert("Logged out successfully!");
+                window.location.href = "login.html";
+            } catch (error) {
+                console.error("Error logging out:", error.message);
+            }
+        };
+
+        // Monitor Authentication State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Set up real-time listener for balance updates
+                setUpRealTimeBalanceListener(user.uid);
             } else {
+                alert("You must log in to access this page.");
                 window.location.href = "login.html";
             }
+        });
 
-            // Fetch and display system-wide message
-            const systemMessageRef = doc(db, "system", "message");
-            const messageSnap = await getDoc(systemMessageRef);
-            
-            if (messageSnap.exists()) {
-                document.getElementById('systemMessage').innerText = messageSnap.data().message;
-            } else {
-                console.log("No system message found.");
-            }
+        // Attach Event Listener for Logout Button
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("logoutButton").addEventListener("click", logOut);
         });
     </script>
 </body>
