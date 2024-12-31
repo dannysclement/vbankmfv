@@ -290,8 +290,8 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -309,7 +309,32 @@
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to fetch balance, username, and system message for logged-in user
+        // Handle user sign-up and login
+        async function signUp(email, password, username) {
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const userRef = doc(db, "users", user.uid);
+                await setDoc(userRef, {
+                    username: username,
+                    balance: 0.00
+                });
+                console.log("User signed up and balance initialized.");
+            } catch (error) {
+                console.error("Error signing up: ", error.message);
+            }
+        }
+
+        async function login(email, password) {
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                console.log("User logged in successfully.");
+            } catch (error) {
+                console.error("Error logging in: ", error.message);
+            }
+        }
+
+        // Function to fetch user balance and update UI
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
@@ -319,21 +344,9 @@
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
-                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
-
-                    // Watch for real-time balance updates
-                    userRef.onSnapshot((snapshot) => {
-                        const updatedBalance = snapshot.data().balance;
-                        document.getElementById('userBalance').innerText = "₦" + updatedBalance;
-                    });
+                    document.getElementById('userBalance').innerText = "₦" + userData.balance.toFixed(2);
                 } else {
-                    // If user data doesn't exist, create a new document with default balance
-                    await setDoc(userRef, {
-                        username: user.displayName || "New User",
-                        balance: 0.00
-                    });
-                    document.getElementById('userName').innerText = "New User";
-                    document.getElementById('userBalance').innerText = "₦0.00";
+                    console.log("No such user data!");
                 }
             } else {
                 // User is not signed in
