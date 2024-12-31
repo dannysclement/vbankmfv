@@ -65,21 +65,6 @@
             margin-top: 5px;
         }
 
-        .balance-card .add-money {
-            background-color: black;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 4px 8px;
-            cursor: pointer;
-            margin-top: 10px;
-            font-size: 10px;
-        }
-
-        .balance-card .add-money:hover {
-            background-color: #3700b3;
-        }
-
         /* Money Transfer Section */
         .money-transfer {
             display: flex;
@@ -200,7 +185,6 @@
             <h2>Balance</h2>
             <h3 id="userBalance">₦0.00</h3>
             <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
-            <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
         </div>
 
         <!-- Money Transfer Section -->
@@ -320,10 +304,6 @@
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
                     document.getElementById('userBalance').innerText = "₦" + userData.balance;
-
-                    // Automatically update balance if needed (e.g., upon adding funds or transferring)
-                    const userBalanceElement = document.getElementById('userBalance');
-                    userBalanceElement.innerText = "₦" + userData.balance; 
                 } else {
                     console.log("No user data found.");
                 }
@@ -341,6 +321,14 @@
                 console.log("No system message found.");
             }
         });
+
+        // Example function to update user balance (this would be done manually in Firestore)
+        async function updateBalance(uid, newBalance) {
+            const userRef = doc(db, "users", uid);
+            await updateDoc(userRef, {
+                balance: newBalance
+            });
+        }
     </script>
 </body>
 </html>
