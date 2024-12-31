@@ -314,7 +314,11 @@
         // Function to update the balance
         function updateUserBalance(balance) {
             const userBalanceElement = document.getElementById('userBalance');
-            userBalanceElement.innerText = "₦" + balance;
+            if (balance <= 0) {
+                userBalanceElement.innerText = "₦0.00";
+            } else {
+                userBalanceElement.innerText = "₦" + balance.toFixed(2);
+            }
         }
 
         // Fetch user data and update balance
@@ -327,7 +331,7 @@
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     document.getElementById('userName').innerText = userData.username || "User";
-                    updateUserBalance(userData.balance);
+                    updateUserBalance(userData.balance || 0); // Set balance to 0 if it's missing
                 } else {
                     console.log("No user data found.");
                 }
