@@ -192,7 +192,7 @@
         <div class="header">
             <h1 id="userName">Loading...</h1>
             <p>Welcome, let's make payments!</p>
-            <p id="systemMessage" class="system-message">📢 Loading message...</p>
+            <p>📢 Recipient will be charged ₦50 of the EMTL...</p>
         </div>
 
         <!-- Balance Section -->
@@ -200,18 +200,17 @@
             <h2>Balance</h2>
             <h3 id="userBalance">₦0.00</h3>
             <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
-            <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
         </div>
 
         <!-- Money Transfer Section -->
         <div class="money-transfer">
             <div onclick="window.location.href='bank.html'">
-                <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="VBANKMFV">
+                <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="Bank">
                 <p>To Bank</p>
             </div>
-            <div onclick="window.location.href='vbankmfv.html'">
+            <div onclick="window.location.href='palmPay.html'">
                 <img src="https://img.icons8.com/color/48/palm-tree.png" alt="PalmPay">
-                <p>To VBANKMFV</p>
+                <p>To PalmPay</p>
             </div>
             <div onclick="window.location.href='withdraw.html'">
                 <img src="https://img.icons8.com/color/48/cash-in-hand.png" alt="Withdraw">
@@ -264,7 +263,7 @@
 
     <!-- Scrollable Footer Section -->
     <div class="footer">
-        <button onclick="window.location.reload()">
+        <button onclick="window.location.href='home.html'">
             <img src="https://img.icons8.com/ios-filled/50/home.png" alt="Home">
             <span>Home</span>
         </button>
@@ -288,10 +287,12 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -302,38 +303,30 @@
             measurementId: "G-G37D2FP82T"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getFirestore(app);
 
-        // Function to fetch balance, username, and system message for logged-in user
+        // Function to fetch balance and username for logged-in user
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const uid = user.uid;
                 const userRef = doc(db, "users", uid);
-
-                // Real-time listener for user balance and username
-                onSnapshot(userRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        document.getElementById('userName').innerText = userData.username || "User";
-                        document.getElementById('userBalance').innerText = "₦" + userData.balance;
-                    } else {
-                        console.log("No such user data!");
-                    }
-                });
+                const docSnap = await getDoc(userRef);
+                
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    document.getElementById('userName').innerText = userData.username || "User";
+                    document.getElementById('userBalance').innerText = "₦" + (userData.balance || "0.00");
+                } else {
+                    // Initialize balance if not already set
+                    await setDoc(userRef, { balance: 0.00, username: user.displayName });
+                    document.getElementById('userBalance').innerText = "₦0.00";
+                }
             } else {
+                // User is not signed in
                 window.location.href = "login.html";
-            }
-
-            // Fetch system-wide message for all users
-            const systemMessageRef = doc(db, "system", "message");
-            const messageSnap = await getDoc(systemMessageRef);
-            
-            if (messageSnap.exists()) {
-                document.getElementById('systemMessage').innerText = messageSnap.data().message;
-            } else {
-                console.log("No system message found!");
             }
         });
     </script>
