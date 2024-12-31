@@ -299,36 +299,25 @@
                 const uid = user.uid;
                 const userRef = doc(db, "users", uid);
                 const docSnap = await getDoc(userRef);
-                
+
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
-                    document.getElementById('userName').innerText = userData.username || "User";
-                    document.getElementById('userBalance').innerText = "₦" + userData.balance;
-                } else {
-                    console.log("No user data found.");
-                }
-            } else {
-                window.location.href = "login.html";
-            }
+                    document.getElementById("userName").innerText = userData.name || "User";
+                    document.getElementById("userBalance").innerText = `₦${userData.balance || "0.00"}`;
 
-            // Fetch and display system-wide message
-            const systemMessageRef = doc(db, "system", "message");
-            const messageSnap = await getDoc(systemMessageRef);
-            
-            if (messageSnap.exists()) {
-                document.getElementById('systemMessage').innerText = messageSnap.data().message;
-            } else {
-                console.log("No system message found.");
+                    // Handle manual balance update (optional)
+                    document.getElementById("userBalance").addEventListener('click', async () => {
+                        const newBalance = prompt("Enter new balance:");
+                        if (newBalance) {
+                            await updateDoc(userRef, { balance: parseFloat(newBalance) });
+                            document.getElementById("userBalance").innerText = `₦${newBalance}`;
+                        }
+                    });
+                } else {
+                    console.log("No such document!");
+                }
             }
         });
-
-        // Example function to update user balance (this would be done manually in Firestore)
-        async function updateBalance(uid, newBalance) {
-            const userRef = doc(db, "users", uid);
-            await updateDoc(userRef, {
-                balance: newBalance
-            });
-        }
     </script>
 </body>
 </html>
