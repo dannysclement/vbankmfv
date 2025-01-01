@@ -316,7 +316,7 @@ const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Real-time Firestore Listener for User Balance and Username
+// Real-time Firestore Listener for User Balance, Username, and System Message
 const setUpRealTimeListener = (userId) => {
     const userDoc = doc(db, "users", userId);
 
