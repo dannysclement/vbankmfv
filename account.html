@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrollable Dashboard</title>
+    <title>User Dashboard</title>
     <style>
         /* Global Styles */
         body {
@@ -15,7 +15,8 @@
         }
 
         .container {
-            padding: 15px;
+            padding: 10px;
+            font-size: 12px;
         }
 
         /* Header Section */
@@ -23,15 +24,17 @@
             background-color: #1c1c1c;
             border-radius: 10px;
             padding: 10px;
+            position: relative;
         }
 
         .header h1 {
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: bold;
             margin: 0;
         }
 
         .header p {
-            font-size: 12px;
+            font-size: 10px;
             margin: 5px 0;
         }
 
@@ -39,27 +42,27 @@
         .balance-card {
             background-color: #6a1b9a;
             border-radius: 10px;
-            padding: 10px;
+            padding: 8px;
             color: white;
-            margin: 15px 0;
-            position: relative;
+            margin: 10px 0;
+            font-weight: bold;
         }
 
         .balance-card h2 {
-            font-size: 20px;
+            font-size: 14px;
             margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        }
+
+        .balance-card h3 {
+            font-size: 16px;
+            margin: 5px 0;
         }
 
         .balance-card .transaction-history {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 12px;
+            font-size: 10px;
             text-decoration: underline;
             cursor: pointer;
+            margin-top: 5px;
         }
 
         .balance-card .add-money {
@@ -67,10 +70,10 @@
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 8px 15px;
+            padding: 4px 8px;
             cursor: pointer;
-            margin-top: 15px;
-            font-size: 12px;
+            margin-top: 10px;
+            font-size: 10px;
         }
 
         .balance-card .add-money:hover {
@@ -81,17 +84,17 @@
         .money-transfer {
             display: flex;
             justify-content: space-between;
-            margin: 15px 0;
+            margin: 10px 0;
         }
 
         .money-transfer div {
             background-color: #1c1c1c;
-            padding: 10px;
+            padding: 8px;
             border-radius: 10px;
             text-align: center;
             flex: 1;
             margin: 0 5px;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .money-transfer div img {
@@ -103,12 +106,12 @@
         .reward-section {
             background-color: #1c1c1c;
             border-radius: 10px;
-            margin: 15px 0;
-            padding: 10px;
+            margin: 10px 0;
+            padding: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .reward-section button {
@@ -116,9 +119,9 @@
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 8px 15px;
+            padding: 5px 12px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .reward-section button:hover {
@@ -129,28 +132,28 @@
         .services {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            font-size: 10px;
+            gap: 8px;
+            font-size: 8px;
         }
 
         .service-item {
             background-color: #1c1c1c;
             border-radius: 10px;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
             flex: 1 0 21%;
             box-sizing: border-box;
         }
 
         .service-item img {
-            width: 30px;
+            width: 25px;
             margin-bottom: 5px;
         }
 
         /* Scrollable Footer Section */
         .footer {
             background-color: #1c1c1c;
-            padding: 10px;
+            padding: 8px;
             position: fixed;
             bottom: 0;
             width: 100%;
@@ -175,7 +178,7 @@
 
         .footer button span {
             display: block;
-            font-size: 10px;
+            font-size: 8px;
         }
 
         .footer button:hover {
@@ -187,28 +190,30 @@
     <div class="container">
         <!-- Header Section -->
         <div class="header">
-            <h1 id="username">Hi, User</h1>
-            <p id="systemMessage">📢 Recipient will be charged ₦50 of the EMTL...</p>
+            <h1 id="userName">Loading...</h1>
+            <p>Welcome, let's make payments!</p>
+            <p id="systemMessage" class="system-message">📢 Loading message...</p>
         </div>
 
         <!-- Balance Section -->
         <div class="balance-card">
-            <h2 id="userBalance">₦0.00</h2>
-            <span class="transaction-history">Transaction History</span>
-            <button class="add-money">Add Money</button>
+            <h2>Balance</h2>
+            <h3 id="userBalance">₦0.00</h3>
+            <span class="transaction-history" onclick="window.location.href='transactionHistory.html'">Transaction History</span>
+            <button class="add-money" onclick="window.location.href='addfund.html'">Add Money</button>
         </div>
 
         <!-- Money Transfer Section -->
         <div class="money-transfer">
-            <div>
-                <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="Bank">
+            <div onclick="window.location.href='bank.html'">
+                <img src="https://img.icons8.com/fluency/48/bank-building.png" alt="VBANKMFV">
                 <p>To Bank</p>
             </div>
-            <div>
+            <div onclick="window.location.href='vbankmfv.html'">
                 <img src="https://img.icons8.com/color/48/palm-tree.png" alt="PalmPay">
-                <p>To PalmPay</p>
+                <p>To VBANKMFV</p>
             </div>
-            <div>
+            <div onclick="window.location.href='withdraw.html'">
                 <img src="https://img.icons8.com/color/48/cash-in-hand.png" alt="Withdraw">
                 <p>Withdraw</p>
             </div>
@@ -217,40 +222,40 @@
         <!-- Reward Section -->
         <div class="reward-section">
             <p>₦200,000 Daily Login Reward! Claim your daily Trial Cash.</p>
-            <button>Claim</button>
+            <button onclick="window.location.href='reward.html'">Claim</button>
         </div>
 
         <!-- Services Section -->
         <div class="services">
-            <div class="service-item">
+            <div class="service-item" onclick="window.location.href='airtime.html'">
                 <img src="https://img.icons8.com/color/48/phone.png" alt="Airtime">
                 <p>Airtime</p>
             </div>
-            <div class="service-item">
+            <div class="service-item" onclick="window.location.href='data.html'">
                 <img src="https://img.icons8.com/color/48/internet.png" alt="Data">
                 <p>Data</p>
             </div>
-            <div class="service-item">
+            <div class="service-item" onclick="window.location.href='betting.html'">
                 <img src="https://cdn-icons-png.flaticon.com/512/8893/8893296.png" alt="Betting Fund">
                 <p>Betting Fund</p>
             </div>
-            <div class="service-item">
+            <div class="service-item" onclick="window.location.href='electricity.html'">
                 <img src="https://img.icons8.com/color/48/electricity.png" alt="Electricity">
                 <p>Electricity</p>
             </div>
-            <div class="service-item">
+            <div class="service-item" onclick="window.location.href='tv.html'">
                 <img src="https://img.icons8.com/color/48/tv.png" alt="TV">
                 <p>TV</p>
             </div>
-            <div class="service-item">
+            <div class="service-item" onclick="window.location.href='winBig.html'">
                 <img src="https://img.icons8.com/color/48/cash-register.png" alt="Win Big">
                 <p>Win Big</p>
             </div>
-            <div class="service-item">
+            <div class="service-item" onclick="window.location.href='referEarn.html'">
                 <img src="https://img.icons8.com/color/48/gift.png" alt="Refer & Earn">
                 <p>Refer & Earn</p>
             </div>
-            <div class="service-item">
+            <div class="service-item" onclick="window.location.href='atmCard.html'">
                 <img src="https://img.icons8.com/color/48/card-in-use.png" alt="ATM Card">
                 <p>ATM Card</p>
             </div>
@@ -259,36 +264,34 @@
 
     <!-- Scrollable Footer Section -->
     <div class="footer">
-        <button>
+        <button onclick="window.location.reload()">
             <img src="https://img.icons8.com/ios-filled/50/home.png" alt="Home">
             <span>Home</span>
         </button>
-        <button>
+        <button onclick="window.location.href='loan.html'">
             <img src="https://cdn-icons-png.flaticon.com/512/2058/2058198.png" alt="Loan">
             <span>Loan</span>
         </button>
-        <button>
+        <button onclick="window.location.href='wealth.html'">
             <img src="https://img.icons8.com/ios-filled/50/bar-chart.png" alt="Wealth">
             <span>Wealth</span>
         </button>
-        <button>
+        <button onclick="window.location.href='reward.html'">
             <img src="https://img.icons8.com/ios-filled/50/gift.png" alt="Reward">
             <span>Reward</span>
         </button>
-        <button id="logoutButton">
+        <button onclick="window.location.href='me.html'">
             <img src="https://img.icons8.com/ios-filled/50/user.png" alt="Me">
             <span>Me</span>
         </button>
     </div>
 
+    <!-- Firebase SDKs -->
     <script type="module">
-        // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -299,74 +302,39 @@
             measurementId: "G-G37D2FP82T"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const auth = getAuth(app);
+        const auth = getAuth();
         const db = getFirestore(app);
 
-        // Real-time Firestore Listener for User Balance, Username, and System Message
-        const setUpRealTimeListener = (userId) => {
-            const userDoc = doc(db, "users", userId);
-
-            onSnapshot(userDoc, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const { balance, username } = docSnapshot.data();
-                    document.getElementById("userBalance").innerText = `₦${balance.toFixed(2)}`;
-                    document.getElementById("username").innerText = `Hi, ${username}`;
-                } else {
-                    // Initialize balance to 0 and default username if user does not exist
-                    setDoc(userDoc, { balance: 0, username: "User" });
-                    document.getElementById("userBalance").innerText = "₦0.00";
-                    document.getElementById("username").innerText = "Hi, User";
-                }
-            });
-        };
-
-        // Real-time Listener for System Message (Shared for all users)
-        const setUpSystemMessageListener = () => {
-            const messageDoc = doc(db, "system", "message");
-
-            onSnapshot(messageDoc, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const { message } = docSnapshot.data();
-                    document.getElementById("systemMessage").innerText = message || "📢 Recipient will be charged ₦50 of the EMTL...";
-                } else {
-                    // Initialize system message if it doesn't exist
-                    setDoc(messageDoc, { message: "📢 Recipient will be charged ₦50 of the EMTL..." });
-                    document.getElementById("systemMessage").innerText = "📢 Recipient will be charged ₦50 of the EMTL...";
-                }
-            });
-        };
-
-        // Log Out User
-        const logOut = async () => {
-            try {
-                await signOut(auth);
-                alert("Logged out successfully!");
-                window.location.href = "login.html";
-            } catch (error) {
-                console.error("Error logging out:", error.message);
-            }
-        };
-
-        // Monitor Authentication State
-        onAuthStateChanged(auth, (user) => {
+        // Function to fetch balance, username, and system message for logged-in user
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Set up real-time listener for balance and username updates
-                setUpRealTimeListener(user.uid);
+                const uid = user.uid;
+                const userRef = doc(db, "users", uid);
+
+                // Real-time listener for user balance and username
+                onSnapshot(userRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        document.getElementById('userName').innerText = userData.username || "User";
+                        document.getElementById('userBalance').innerText = "₦" + userData.balance;
+                    } else {
+                        console.log("No such user data!");
+                    }
+                });
             } else {
-                alert("You must log in to access this page.");
                 window.location.href = "login.html";
             }
-        });
 
-        // Set up system message listener
-        setUpSystemMessageListener();
-
-        // Attach Event Listener for Logout Button
-        document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById("logoutButton").addEventListener("click", logOut);
+            // Fetch system-wide message for all users
+            const systemMessageRef = doc(db, "system", "message");
+            const messageSnap = await getDoc(systemMessageRef);
+            
+            if (messageSnap.exists()) {
+                document.getElementById('systemMessage').innerText = messageSnap.data().message;
+            } else {
+                console.log("No system message found!");
+            }
         });
     </script>
 </body>
