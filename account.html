@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
     <style>
+        /* Global Styles */
         body {
             margin: 0;
             padding: 0;
@@ -18,6 +19,7 @@
             font-size: 12px;
         }
 
+        /* Header Section */
         .header {
             background-color: #1c1c1c;
             border-radius: 10px;
@@ -36,6 +38,7 @@
             margin: 5px 0;
         }
 
+        /* Balance Card */
         .balance-card {
             background-color: #6a1b9a;
             border-radius: 10px;
@@ -77,6 +80,7 @@
             background-color: #3700b3;
         }
 
+        /* Money Transfer Section */
         .money-transfer {
             display: flex;
             justify-content: space-between;
@@ -98,6 +102,7 @@
             margin-bottom: 5px;
         }
 
+        /* Reward Section */
         .reward-section {
             background-color: #1c1c1c;
             border-radius: 10px;
@@ -123,6 +128,7 @@
             background-color: #3700b3;
         }
 
+        /* Services Section */
         .services {
             display: flex;
             flex-wrap: wrap;
@@ -144,6 +150,7 @@
             margin-bottom: 5px;
         }
 
+        /* Scrollable Footer Section */
         .footer {
             background-color: #1c1c1c;
             padding: 8px;
@@ -273,6 +280,7 @@
         </button>
     </div>
 
+    <!-- Firebase Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
@@ -306,18 +314,32 @@
             }
         };
 
-        const checkAndCreateBalance = async (userId) => {
+        const createBalanceIfNotExists = async (userId) => {
             const userDocRef = doc(db, "users", userId);
-            const userDoc = await getDoc(userDocRef);
-            if (!userDoc.exists()) {
-                await setDoc(userDocRef, { balance: 0 });
+            const balanceDocRef = doc(db, "balances", userId);
+
+            try {
+                // Check if user balance exists
+                const userDoc = await getDoc(userDocRef);
+                if (!userDoc.exists()) {
+                    // Create balance field if it doesn't exist
+                    await setDoc(userDocRef, { username: userId });
+                }
+
+                const balanceDoc = await getDoc(balanceDocRef);
+                if (!balanceDoc.exists()) {
+                    // Create balance with ₦0 if not set
+                    await setDoc(balanceDocRef, { balance: 0 });
+                    document.getElementById("userBalance").innerText = "₦0.00";
+                }
+            } catch (error) {
+                console.error("Error checking or setting balance:", error.message);
             }
-            setUpRealTimeBalanceListener(userId);
         };
 
         const setUpRealTimeBalanceListener = (userId) => {
-            const userDocRef = doc(db, "users", userId);
-            onSnapshot(userDocRef, async (docSnapshot) => {
+            const balanceDocRef = doc(db, "balances", userId);
+            onSnapshot(balanceDocRef, (docSnapshot) => {
                 const balanceElement = document.getElementById("userBalance");
                 if (docSnapshot.exists()) {
                     const { balance } = docSnapshot.data();
@@ -352,7 +374,8 @@
             if (user) {
                 displayUsername(user.uid);
                 displaySystemMessage();
-                checkAndCreateBalance(user.uid);
+                createBalanceIfNotExists(user.uid);
+                setUpRealTimeBalanceListener(user.uid);
             } else {
                 alert("You must log in to access this page.");
                 window.location.href = "login.html";
