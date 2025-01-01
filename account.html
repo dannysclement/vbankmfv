@@ -291,8 +291,8 @@
   // Import Firebase SDKs
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
   // Firebase Configuration
   const firebaseConfig = {
@@ -310,6 +310,42 @@
   const analytics = getAnalytics(app);
   const auth = getAuth(app);
   const db = getFirestore(app);
+
+  /**
+   * Create a new user and store the balance in Firestore.
+   * @param {string} email - User's email.
+   * @param {string} password - User's password.
+   * @param {string} username - User's chosen username.
+   */
+  const signUp = async (email, password, username) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      // Add the user document to Firestore with initial balance
+      await setDoc(doc(db, "users", user.uid), {
+        username,
+        balance: 0, // Initialize balance to 0
+      });
+      console.log("User signed up and balance initialized:", user.uid);
+    } catch (error) {
+      console.error("Error signing up:", error.message);
+    }
+  };
+
+  /**
+   * Log in a user.
+   * @param {string} email - User's email.
+   * @param {string} password - User's password.
+   */
+  const signIn = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log("User signed in:", user.uid);
+    } catch (error) {
+      console.error("Error signing in:", error.message);
+    }
+  };
 
   /**
    * Display the current user's username.
@@ -399,6 +435,7 @@
     }
   });
 </script>
+
 
 </body>
 </html>
