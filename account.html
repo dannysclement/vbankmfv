@@ -292,7 +292,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
   import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
   // Firebase Configuration
   const firebaseConfig = {
@@ -312,44 +312,8 @@
   const db = getFirestore(app);
 
   /**
-   * Create a new user and store the balance in Firestore.
-   * @param {string} email - User's email.
-   * @param {string} password - User's password.
-   * @param {string} username - User's chosen username.
-   */
-  const signUp = async (email, password, username) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      // Add the user document to Firestore with initial balance
-      await setDoc(doc(db, "users", user.uid), {
-        username,
-        balance: 0, // Initialize balance to 0
-      });
-      console.log("User signed up and balance initialized:", user.uid);
-    } catch (error) {
-      console.error("Error signing up:", error.message);
-    }
-  };
-
-  /**
-   * Log in a user.
-   * @param {string} email - User's email.
-   * @param {string} password - User's password.
-   */
-  const signIn = async (email, password) => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      console.log("User signed in:", user.uid);
-    } catch (error) {
-      console.error("Error signing in:", error.message);
-    }
-  };
-
-  /**
-   * Display the current user's username.
-   * @param {string} userId - The user's unique identifier.
+   * Fetch and display the current user's username from Firestore.
+   * @param {string} userId - The user's unique identifier (UID).
    */
   const displayUsername = async (userId) => {
     const userDocRef = doc(db, "users", userId);
@@ -364,37 +328,41 @@
   };
 
   /**
-   * Display a system message from Firestore.
-   */
-  const displaySystemMessage = async () => {
-    const systemDocRef = doc(db, "system", "message");
-    try {
-      const systemDoc = await getDoc(systemDocRef);
-      const message = systemDoc.exists() ? systemDoc.data().message : "No system messages.";
-      document.getElementById("systemMessage").innerText = message;
-    } catch (error) {
-      console.error("Error fetching system message:", error.message);
-      document.getElementById("systemMessage").innerText = "No system messages.";
-    }
-  };
-
-  /**
-   * Set up a real-time listener for user balance updates.
-   * @param {string} userId - The user's unique identifier.
+   * Set up a real-time listener for user balance updates and initialize if needed.
+   * @param {string} userId - The user's unique identifier (UID).
    */
   const setUpRealTimeBalanceListener = (userId) => {
     const userDocRef = doc(db, "users", userId);
-
+    
+    // Listen for balance updates in real-time
     onSnapshot(userDocRef, (docSnapshot) => {
       const balanceElement = document.getElementById("userBalance");
       if (docSnapshot.exists()) {
         const { balance } = docSnapshot.data();
         balanceElement.innerText = `₦${balance.toFixed(2)}`;
       } else {
-        setDoc(userDocRef, { balance: 0 });
+        // If no balance exists, initialize it to 0
+        setDoc(userDocRef, { balance: 0 }, { merge: true });
         balanceElement.innerText = "₦0.00";
       }
     });
+  };
+
+  /**
+   * Store user balance immediately after sign-up or login.
+   * @param {string} userId - The user's unique identifier (UID).
+   */
+  const storeUserBalance = async (userId) => {
+    const userDocRef = doc(db, "users", userId);
+    try {
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        // Initialize balance to 0 if the user document doesn't exist
+        await setDoc(userDocRef, { balance: 0 });
+      }
+    } catch (error) {
+      console.error("Error storing user balance:", error.message);
+    }
   };
 
   /**
@@ -415,9 +383,8 @@
    */
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // Display user details and system message
+      // Display user details, balance, and set up real-time listener
       displayUsername(user.uid);
-      displaySystemMessage();
       setUpRealTimeBalanceListener(user.uid);
     } else {
       alert("You must log in to access this page.");
@@ -426,12 +393,75 @@
   });
 
   /**
+   * Handle user sign-up.
+   */
+  const signUp = async (email, password, username) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Store user balance and username in Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, { username, balance: 0 });
+
+      // Redirect to a dashboard or main page
+      window.location.href = "account.html";
+    } catch (error) {
+      console.error("Error signing up:", error.message);
+      alert(error.message);
+    }
+  };
+
+  /**
+   * Handle user login.
+   */
+  const login = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Fetch user balance and username after login
+      displayUsername(user.uid);
+      setUpRealTimeBalanceListener(user.uid);
+
+      // Redirect to the user's dashboard or home page
+      window.location.href = "account.html";
+    } catch (error) {
+      console.error("Error logging in:", error.message);
+      alert(error.message);
+    }
+  };
+
+  /**
    * Attach event listeners after DOM is fully loaded.
    */
   document.addEventListener("DOMContentLoaded", () => {
     const logoutButton = document.getElementById("logoutButton");
+    const signUpButton = document.getElementById("signUpButton");
+    const loginButton = document.getElementById("loginButton");
+
+    // Event listener for logout
     if (logoutButton) {
       logoutButton.addEventListener("click", logOut);
+    }
+
+    // Event listener for sign-up
+    if (signUpButton) {
+      signUpButton.addEventListener("click", () => {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const username = document.getElementById("username").value;
+        signUp(email, password, username);
+      });
+    }
+
+    // Event listener for login
+    if (loginButton) {
+      loginButton.addEventListener("click", () => {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        login(email, password);
+      });
     }
   });
 </script>
