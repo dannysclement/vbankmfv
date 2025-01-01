@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
     <style>
-        /* Global Styles */
         body {
             margin: 0;
             padding: 0;
@@ -19,7 +18,6 @@
             font-size: 12px;
         }
 
-        /* Header Section */
         .header {
             background-color: #1c1c1c;
             border-radius: 10px;
@@ -38,7 +36,6 @@
             margin: 5px 0;
         }
 
-        /* Balance Card */
         .balance-card {
             background-color: #6a1b9a;
             border-radius: 10px;
@@ -80,7 +77,6 @@
             background-color: #3700b3;
         }
 
-        /* Money Transfer Section */
         .money-transfer {
             display: flex;
             justify-content: space-between;
@@ -102,7 +98,6 @@
             margin-bottom: 5px;
         }
 
-        /* Reward Section */
         .reward-section {
             background-color: #1c1c1c;
             border-radius: 10px;
@@ -128,7 +123,6 @@
             background-color: #3700b3;
         }
 
-        /* Services Section */
         .services {
             display: flex;
             flex-wrap: wrap;
@@ -150,7 +144,6 @@
             margin-bottom: 5px;
         }
 
-        /* Scrollable Footer Section */
         .footer {
             background-color: #1c1c1c;
             padding: 8px;
@@ -280,111 +273,98 @@
         </button>
     </div>
 
-    <!-- Firebase Script -->
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-      import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-      import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
-        authDomain: "vbankmfv.firebaseapp.com",
-        projectId: "vbankmfv",
-        storageBucket: "vbankmfv.firebasestorage.app",
-        messagingSenderId: "920021461554",
-        appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
-        measurementId: "G-G37D2FP82T",
-      };
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
+            authDomain: "vbankmfv.firebaseapp.com",
+            projectId: "vbankmfv",
+            storageBucket: "vbankmfv.firebasestorage.app",
+            messagingSenderId: "920021461554",
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+            measurementId: "G-G37D2FP82T",
+        };
 
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-      const displayUsername = async (userId) => {
-        const userDocRef = doc(db, "users", userId);
-        try {
-          const userDoc = await getDoc(userDocRef);
-          const username = userDoc.exists() ? userDoc.data().username : "User";
-          document.getElementById("usernameDisplay").innerText = `Welcome, ${username}!`;
-        } catch (error) {
-          console.error("Error fetching username:", error.message);
-          document.getElementById("usernameDisplay").innerText = "Welcome, User!";
-        }
-      };
-
-      const checkAndCreateBalance = async (userId) => {
-        const userDocRef = doc(db, "users", userId);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-          try {
-            await setDoc(userDocRef, { balance: 0 });
-          } catch (error) {
-            console.error("Error creating user balance:", error.message);
-          }
-        }
-      };
-
-      const setUpRealTimeBalanceListener = (userId) => {
-        const userDocRef = doc(db, "users", userId);
-
-        onSnapshot(userDocRef, async (docSnapshot) => {
-          const balanceElement = document.getElementById("userBalance");
-          if (docSnapshot.exists()) {
-            const { balance } = docSnapshot.data();
-            balanceElement.innerText = `₦${balance.toFixed(2)}`;
-          } else {
+        const displayUsername = async (userId) => {
+            const userDocRef = doc(db, "users", userId);
             try {
-              await setDoc(userDocRef, { balance: 0 });
-              balanceElement.innerText = "₦0.00";
+                const userDoc = await getDoc(userDocRef);
+                const username = userDoc.exists() ? userDoc.data().username : "User";
+                document.getElementById("usernameDisplay").innerText = `Welcome, ${username}!`;
             } catch (error) {
-              console.error("Error initializing balance:", error.message);
+                console.error("Error fetching username:", error.message);
+                document.getElementById("usernameDisplay").innerText = "Welcome, User!";
             }
-          }
+        };
+
+        const checkAndCreateBalance = async (userId) => {
+            const userDocRef = doc(db, "users", userId);
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) {
+                await setDoc(userDocRef, { balance: 0 });
+            }
+            setUpRealTimeBalanceListener(userId);
+        };
+
+        const setUpRealTimeBalanceListener = (userId) => {
+            const userDocRef = doc(db, "users", userId);
+            onSnapshot(userDocRef, async (docSnapshot) => {
+                const balanceElement = document.getElementById("userBalance");
+                if (docSnapshot.exists()) {
+                    const { balance } = docSnapshot.data();
+                    balanceElement.innerText = `₦${balance.toFixed(2)}`;
+                }
+            });
+        };
+
+        const displaySystemMessage = async () => {
+            const systemDocRef = doc(db, "system", "message");
+            try {
+                const systemDoc = await getDoc(systemDocRef);
+                const message = systemDoc.exists() ? systemDoc.data().message : "No system messages.";
+                document.getElementById("systemMessage").innerText = message;
+            } catch (error) {
+                console.error("Error fetching system message:", error.message);
+                document.getElementById("systemMessage").innerText = "No system messages.";
+            }
+        };
+
+        const logOut = async () => {
+            try {
+                await signOut(auth);
+                alert("Logged out successfully!");
+                window.location.href = "login.html";
+            } catch (error) {
+                console.error("Error logging out:", error.message);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                displayUsername(user.uid);
+                displaySystemMessage();
+                checkAndCreateBalance(user.uid);
+            } else {
+                alert("You must log in to access this page.");
+                window.location.href = "login.html";
+            }
         });
-      };
 
-      const displaySystemMessage = async () => {
-        const systemDocRef = doc(db, "system", "message");
-        try {
-          const systemDoc = await getDoc(systemDocRef);
-          const message = systemDoc.exists() ? systemDoc.data().message : "No system messages.";
-          document.getElementById("systemMessage").innerText = message;
-        } catch (error) {
-          console.error("Error fetching system message:", error.message);
-          document.getElementById("systemMessage").innerText = "No system messages.";
-        }
-      };
-
-      const logOut = async () => {
-        try {
-          await signOut(auth);
-          alert("Logged out successfully!");
-          window.location.href = "login.html";
-        } catch (error) {
-          console.error("Error logging out:", error.message);
-        }
-      };
-
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          await displayUsername(user.uid);
-          await checkAndCreateBalance(user.uid);
-          displaySystemMessage();
-          setUpRealTimeBalanceListener(user.uid);
-        } else {
-          alert("You must log in to access this page.");
-          window.location.href = "login.html";
-        }
-      });
-
-      document.addEventListener("DOMContentLoaded", () => {
-        const logoutButton = document.getElementById("logoutButton");
-        if (logoutButton) {
-          logoutButton.addEventListener("click", logOut);
-        }
-      });
+        document.addEventListener("DOMContentLoaded", () => {
+            const logoutButton = document.getElementById("logoutButton");
+            if (logoutButton) {
+                logoutButton.addEventListener("click", logOut);
+            }
+        });
     </script>
 </body>
 </html>
