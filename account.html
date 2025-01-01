@@ -314,6 +314,18 @@
         }
       };
 
+      const checkAndCreateBalance = async (userId) => {
+        const userDocRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+          try {
+            await setDoc(userDocRef, { balance: 0 });
+          } catch (error) {
+            console.error("Error creating user balance:", error.message);
+          }
+        }
+      };
+
       const setUpRealTimeBalanceListener = (userId) => {
         const userDocRef = doc(db, "users", userId);
 
@@ -355,9 +367,10 @@
         }
       };
 
-      onAuthStateChanged(auth, (user) => {
+      onAuthStateChanged(auth, async (user) => {
         if (user) {
-          displayUsername(user.uid);
+          await displayUsername(user.uid);
+          await checkAndCreateBalance(user.uid);
           displaySystemMessage();
           setUpRealTimeBalanceListener(user.uid);
         } else {
