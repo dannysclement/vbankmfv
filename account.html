@@ -292,7 +292,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-  import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
   // Firebase Configuration
   const firebaseConfig = {
@@ -319,32 +319,26 @@
     const userDocRef = doc(db, "users", userId);
     try {
       const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const { username } = userDoc.data();
-        document.getElementById("usernameDisplay").innerText = `Welcome, ${username || "User"}!`;
-      } else {
-        document.getElementById("usernameDisplay").innerText = "Welcome, User!";
-      }
+      const username = userDoc.exists() ? userDoc.data().username : "User";
+      document.getElementById("usernameDisplay").innerText = `Welcome, ${username}!`;
     } catch (error) {
       console.error("Error fetching username:", error.message);
+      document.getElementById("usernameDisplay").innerText = "Welcome, User!";
     }
   };
 
   /**
-   * Display a system message.
+   * Display a system message from Firestore.
    */
   const displaySystemMessage = async () => {
     const systemDocRef = doc(db, "system", "message");
     try {
       const systemDoc = await getDoc(systemDocRef);
-      if (systemDoc.exists()) {
-        const { message } = systemDoc.data();
-        document.getElementById("systemMessage").innerText = message || "No new messages.";
-      } else {
-        document.getElementById("systemMessage").innerText = "No system messages.";
-      }
+      const message = systemDoc.exists() ? systemDoc.data().message : "No system messages.";
+      document.getElementById("systemMessage").innerText = message;
     } catch (error) {
       console.error("Error fetching system message:", error.message);
+      document.getElementById("systemMessage").innerText = "No system messages.";
     }
   };
 
@@ -385,10 +379,10 @@
    */
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // Fetch and display user-specific details
-      setUpRealTimeBalanceListener(user.uid);
+      // Display user details and system message
       displayUsername(user.uid);
       displaySystemMessage();
+      setUpRealTimeBalanceListener(user.uid);
     } else {
       alert("You must log in to access this page.");
       window.location.href = "login.html";
@@ -396,7 +390,7 @@
   });
 
   /**
-   * Attach event listeners once the DOM is fully loaded.
+   * Attach event listeners after DOM is fully loaded.
    */
   document.addEventListener("DOMContentLoaded", () => {
     const logoutButton = document.getElementById("logoutButton");
