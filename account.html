@@ -288,53 +288,68 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
+        // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
+        // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
-            authDomain: "vbankmfv.firebaseapp.com",
-            projectId: "vbankmfv",
-            storageBucket: "vbankmfv.firebasestorage.app",
-            messagingSenderId: "920021461554",
-            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
-            measurementId: "G-G37D2FP82T"
+          apiKey: "AIzaSyBsQLHmUZUfmciuTIDWz4ezOZ3QTpyjg5M",
+          authDomain: "invest-ad9f0.firebaseapp.com",
+          projectId: "invest-ad9f0",
+          storageBucket: "invest-ad9f0.firebasestorage.app",
+          messagingSenderId: "539673203809",
+          appId: "1:539673203809:web:ce4f05dc9a1a2a96174620",
+          measurementId: "G-7WY9BZYZSM",
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth();
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Function to fetch balance, username, and system message for logged-in user
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const uid = user.uid;
-                const userRef = doc(db, "users", uid);
+        // Real-time Firestore Listener for User Balance
+        const setUpRealTimeBalanceListener = (userId) => {
+          const userDoc = doc(db, "users", userId);
 
-                // Real-time listener for user balance and username
-                onSnapshot(userRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        document.getElementById('userName').innerText = userData.username || "User";
-                        document.getElementById('userBalance').innerText = "₦" + userData.balance;
-                    } else {
-                        console.log("No such user data!");
-                    }
-                });
+          onSnapshot(userDoc, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+              const { balance } = docSnapshot.data();
+              document.getElementById("userBalance").innerText = `₦${balance.toFixed(2)}`;
             } else {
-                window.location.href = "login.html";
+              // Initialize balance to 0 if user does not exist
+              setDoc(userDoc, { balance: 0 });
+              document.getElementById("userBalance").innerText = "₦0.00";
             }
+          });
+        };
 
-            // Fetch system-wide message for all users
-            const systemMessageRef = doc(db, "system", "message");
-            const messageSnap = await getDoc(systemMessageRef);
-            
-            if (messageSnap.exists()) {
-                document.getElementById('systemMessage').innerText = messageSnap.data().message;
-            } else {
-                console.log("No system message found!");
-            }
+        // Log Out User
+        const logOut = async () => {
+          try {
+            await signOut(auth);
+            alert("Logged out successfully!");
+            window.location.href = "login.html";
+          } catch (error) {
+            console.error("Error logging out:", error.message);
+          }
+        };
+
+        // Monitor Authentication State
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            // Set up real-time listener for balance updates
+            setUpRealTimeBalanceListener(user.uid);
+          } else {
+            alert("You must log in to access this page.");
+            window.location.href = "login.html";
+          }
+        });
+
+        // Attach Event Listener for Logout Button
+        document.addEventListener("DOMContentLoaded", () => {
+          document.getElementById("logoutButton").addEventListener("click", logOut);
         });
     </script>
 </body>
