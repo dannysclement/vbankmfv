@@ -144,6 +144,7 @@
             <div class="form-group">
                 <label for="pin">Transaction Pin:</label>
                 <input type="password" id="pin" name="pin" placeholder="Enter Transaction Pin" required>
+                <div id="pin-error" class="error hidden">Incorrect pin. Please try again or <a href="pin.html">create pin</a>.</div>
             </div>
 
             <!-- Submit Button -->
@@ -155,7 +156,8 @@
     <script type="module">
         // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -171,31 +173,63 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // Check the user's balance before confirming the transaction
+        let currentUser = null;
+
+        // Check if user is logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                window.location.href = "login.html"; // Redirect to login if not authenticated
+            }
+        });
+
+        // Check if pin is correct and process transaction
         async function processTransaction() {
+            if (!currentUser) {
+                window.location.href = "login.html";
+                return;
+            }
+
             const phoneNumber = document.getElementById("phone-number").value;
             const amount = parseInt(document.getElementById("amount").value);
+            const pin = document.getElementById("pin").value;
 
             if (!amount) {
                 alert("Please select a valid plan.");
                 return;
             }
 
-            const userDoc = doc(db, "users", phoneNumber);
+            const userDoc = doc(db, "users", currentUser.uid);
             const docSnap = await getDoc(userDoc);
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
+                const userPin = userData.pin;
                 const userBalance = userData.balance;
 
-                if (userBalance >= amount) {
-                    alert("Confirming your transaction...");
-                    // Deduct the amount from user balance
-                    // You can also implement actual transaction logic here.
-                    window.location.href = "receipt.html"; // Redirect to receipt page
+                if (userPin === pin) {
+                    if (userBalance >= amount) {
+                        alert("Confirming your transaction...");
+                        // Deduct the amount from user balance and store transaction data
+                        await setDoc(doc(db, "transactions", currentUser.uid + "_" + Date.now()), {
+                            phoneNumber,
+                            amount,
+                            status: "Completed",
+                            timestamp: Date.now(),
+                        });
+                        // Update balance after transaction
+                        await setDoc(doc(db, "users", currentUser.uid), {
+                            balance: userBalance - amount
+                        });
+                        window.location.href = "receipt.html"; // Redirect to receipt page
+                    } else {
+                        alert("Insufficient funds. Please fund your wallet.");
+                    }
                 } else {
-                    alert("Insufficient funds. Please fund your wallet.");
+                    document.getElementById("pin-error").classList.remove("hidden");
                 }
             } else {
                 alert("User not found. Please check your phone number.");
