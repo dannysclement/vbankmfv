@@ -64,6 +64,12 @@
         .hidden {
             display: none;
         }
+        .loading-message {
+            color: green;
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -150,6 +156,9 @@
             <!-- Submit Button -->
             <button type="button" class="btn" id="submit-btn" onclick="processTransaction()" disabled>Confirm Transaction</button>
         </form>
+
+        <!-- Loading Message -->
+        <div id="loading-message" class="loading-message hidden">Please wait, confirming your transaction...</div>
     </div>
 
     <!-- Firebase SDKs -->
@@ -212,7 +221,11 @@
 
                 if (userPin === pin) {
                     if (userBalance >= amount) {
-                        alert("Confirming your transaction...");
+                        // Show loading message
+                        document.getElementById("loading-message").classList.remove("hidden");
+                        // Disable the button
+                        document.getElementById("submit-btn").disabled = true;
+
                         // Deduct the amount from user balance and store transaction data
                         await setDoc(doc(db, "transactions", currentUser.uid + "_" + Date.now()), {
                             phoneNumber,
@@ -224,7 +237,10 @@
                         await setDoc(doc(db, "users", currentUser.uid), {
                             balance: userBalance - amount
                         });
-                        window.location.href = "receipt.html"; // Redirect to receipt page
+
+                        setTimeout(() => {
+                            window.location.href = "receipt.html"; // Redirect to receipt page
+                        }, 2000); // Wait for 2 seconds before redirecting
                     } else {
                         alert("Insufficient funds. Please fund your wallet.");
                     }
