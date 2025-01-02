@@ -166,6 +166,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        const fetch = require('node-fetch');
 
         // Firebase configuration
         const firebaseConfig = {
@@ -194,7 +195,7 @@
             }
         });
 
-        // Function to process the data purchase
+        // Function to process the data purchase and API integration
         async function buyData() {
             const phoneNumber = document.getElementById("phone-number").value;
             const amount = parseInt(document.getElementById("amount").value);
@@ -219,21 +220,45 @@
 
                 if (userPin === pin) {
                     if (userBalance >= amount) {
-                        // Proceed with transaction
-                        await setDoc(doc(db, "transactions", currentUser.uid + "_" + Date.now()), {
-                            phoneNumber,
-                            amount,
-                            status: "Completed",
-                            timestamp: Date.now(),
+                        // Proceed with API call to buy data
+                        const response = await fetch('https://chinedutopup.com.ng/api/data/', {
+                            method: 'GET',
+                            headers: {
+                                'Token': 'Token bC6p3CABlEv70AkICCCtA7o3exCAyfcxmBBqGcB9h35AAgA1x981CaJ54Hs21725471118',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                network: "1", // Example: MTN network ID
+                                phone: phoneNumber,
+                                ref: "9876543210",
+                                data_plan: "1", // Example: Plan ID
+                                ported_number: false
+                            })
                         });
 
-                        // Update user's balance
-                        await setDoc(doc(db, "users", currentUser.uid), {
-                            balance: userBalance - amount
-                        });
+                        const data = await response.json();
 
-                        // Update status message to success
-                        document.getElementById("status-message").textContent = "Transaction successful! Your data is being processed.";
+                        // Check if the API call was successful
+                        if (data.status === "success") {
+                            // Update status message to success
+                            document.getElementById("status-message").textContent = "Transaction successful! Your data is being processed.";
+                            
+                            // Update user balance in Firestore
+                            await setDoc(doc(db, "users", currentUser.uid), {
+                                balance: userBalance - amount
+                            });
+
+                            // Store transaction in Firestore
+                            await setDoc(doc(db, "transactions", currentUser.uid + "_" + Date.now()), {
+                                phoneNumber,
+                                amount,
+                                status: "Completed",
+                                timestamp: Date.now(),
+                            });
+                        } else {
+                            document.getElementById("status-message").textContent = "Transaction failed. Please try again.";
+                            document.getElementById("status-message").style.color = "red";
+                        }
                     } else {
                         // Insufficient funds
                         document.getElementById("status-message").textContent = "Insufficient funds. Please fund your wallet.";
@@ -244,47 +269,54 @@
                     document.getElementById("status-message").style.color = "red";
                 }
             } else {
-                document.getElementById("status-message").textContent = "User not found.";
+                document.getElementById("status-message").textContent = "User data not found.";
+            }
+        }
+
+        // Validate phone number format
+        function validatePhoneNumber() {
+            const phoneNumber = document.getElementById("phone-number").value;
+            const phoneError = document.getElementById("phone-error");
+            const submitBtn = document.getElementById("submit-btn");
+
+            const phoneRegex = /^0\d{10}$/;
+
+            if (!phoneRegex.test(phoneNumber)) {
+                phoneError.classList.remove("hidden");
+                submitBtn.disabled = true;
+            } else {
+                phoneError.classList.add("hidden");
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Handle network selection change
+        function handleNetworkSelection() {
+            const network = document.getElementById("network").value;
+            if (network !== "select") {
+                document.getElementById("data-type").disabled = false;
+            } else {
+                document.getElementById("data-type").disabled = true;
             }
         }
 
         // Filter plans based on selected data type
         function filterPlans() {
             const dataType = document.getElementById("data-type").value;
-            const plans = document.querySelectorAll("#plan option");
+            const plans = document.getElementById("plan").children;
 
-            plans.forEach(plan => {
-                if (plan.classList.contains(dataType) || dataType === "select") {
-                    plan.style.display = "block";
-                } else {
-                    plan.style.display = "none";
+            for (let plan of plans) {
+                plan.style.display = "none";
+            }
+
+            if (dataType !== "select") {
+                for (let plan of plans) {
+                    if (plan.classList.contains(dataType)) {
+                        plan.style.display = "block";
+                    }
                 }
-            });
-
-            document.getElementById("plan").value = "select";
-        }
-
-        // Validate phone number
-        function validatePhoneNumber() {
-            const phoneNumber = document.getElementById("phone-number").value;
-            const phoneError = document.getElementById("phone-error");
-            const submitButton = document.getElementById("submit-btn");
-
-            if (phoneNumber.length === 11 && phoneNumber.startsWith("0")) {
-                phoneError.classList.add("hidden");
-                submitButton.disabled = false;
-            } else {
-                phoneError.classList.remove("hidden");
-                submitButton.disabled = true;
             }
         }
-
-        // Update amount based on selected plan
-        document.getElementById("plan").addEventListener("change", function () {
-            const selectedOption = this.options[this.selectedIndex];
-            const amount = selectedOption.getAttribute("data-amount");
-            document.getElementById("amount").value = amount || "";
-        })
     </script>
 </body>
 </html>
