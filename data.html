@@ -114,7 +114,7 @@
                 <div id="plan-selection" class="data-plan-list">
                     <label for="plan">Choose Plan:</label>
                     <select id="plan" name="plan">
-                        <!-- SME Plans -->
+                        <!-- Plans -->
                         <option value="500mb-sme" data-amount="150" class="sme">500 MB SME (N 150) (30 Days)</option>
                         <option value="1gb-sme" data-amount="285" class="sme">1GB SME (N 285) (30 Days)</option>
                         <option value="2gb-sme" data-amount="550" class="sme">2GB SME (N 550) (30 Days)</option>
@@ -157,11 +157,9 @@
             </div>
         </form>
 
-        <!-- Airtel Form -->
+        <!-- Network Forms (hidden initially) -->
         <form action="airtel.html" method="get" id="airtel-form" style="display: none;"></form>
-        <!-- Glo Form -->
         <form action="glo.html" method="get" id="glo-form" style="display: none;"></form>
-        <!-- Etisalat Form -->
         <form action="etisalat.html" method="get" id="etisalat-form" style="display: none;"></form>
     </div>
 
@@ -206,6 +204,14 @@
             const selectedType = select.value;
             const planSelection = document.getElementById("plan-selection");
             planSelection.style.display = "block";
+
+            // Automatically update the amount based on the selected plan
+            const selectedPlan = document.getElementById("plan").value;
+            const planOption = document.querySelector(`#plan option[value="${selectedPlan}"]`);
+            if (planOption) {
+                const amount = planOption.getAttribute("data-amount");
+                document.getElementById("amount").value = amount;
+            }
         }
 
         // Validate phone number
@@ -230,31 +236,30 @@
 
             if (docSnap.exists()) {
                 const userBalance = docSnap.data().balance;
-
-                if (userBalance >= amountToPay) {
-                    const newBalance = userBalance - amountToPay;
-                    await updateDoc(userDoc, { balance: newBalance });
-
-                    // Redirect to receipt.html after success
-                    window.location.href = "receipt.html";
-                } else {
-                    alert(`Insufficient balance. Available balance: N ${userBalance}`);
+                if (userBalance < amountToPay) {
+                    alert("Insufficient balance. Please add funds to your account.");
+                    return;
                 }
+
+                // Proceed with transaction
+                const updatedBalance = userBalance - amountToPay;
+                await updateDoc(userDoc, {
+                    balance: updatedBalance
+                });
+
+                alert(`Transaction successful! You have been charged N${amountToPay}.`);
+                window.location.href = "confirmation.html";
             }
         }
 
         // Handle network selection
         function handleNetworkSelection(select) {
-            const selectedNetwork = select.value;
-            const forms = {
-                mtn: document.getElementById('mtn-form'),
-                airtel: document.getElementById('airtel-form'),
-                glo: document.getElementById('glo-form'),
-                etisalat: document.getElementById('etisalat-form')
-            };
-
-            for (let network in forms) {
-                forms[network].style.display = (network === selectedNetwork) ? 'block' : 'none';
+            const network = select.value;
+            document.getElementById("form-details").style.display = (network !== "select") ? "block" : "none";
+            const forms = document.querySelectorAll("form[action$='.html']");
+            forms.forEach(form => form.style.display = "none");
+            if (network !== "select") {
+                document.getElementById(`${network}-form`).style.display = "block";
             }
         }
     </script>
