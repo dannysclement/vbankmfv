@@ -85,8 +85,8 @@
     <div class="container">
         <h2>Data Purchase Details</h2>
 
-        <!-- Form for MTN -->
-        <form action="#" method="post" id="mtn-form">
+        <!-- Form for Data Purchase -->
+        <form action="#" method="post" id="data-form">
             <div class="form-group">
                 <label for="network">Select Network:</label>
                 <select id="network" name="network" onchange="handleNetworkSelection(this)">
@@ -99,7 +99,7 @@
             </div>
 
             <div id="form-details">
-                <!-- Common form fields -->
+                <!-- Select Data Type -->
                 <div class="form-group">
                     <label for="data-type">Select Type:</label>
                     <select id="data-type" name="data-type" onchange="showPlans(this)">
@@ -110,7 +110,7 @@
                     </select>
                 </div>
 
-                <!-- Choose Plan (Common to all types) -->
+                <!-- Choose Plan (Hidden initially, will show after selecting data type) -->
                 <div id="plan-selection" class="data-plan-list">
                     <label for="plan">Choose Plan:</label>
                     <select id="plan" name="plan">
