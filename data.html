@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Purchase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #34495e;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: bold;
+            color: #34495e;
+        }
+        select, input[type="text"], input[type="number"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .btn {
+            background-color: #2980b9;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #3498db;
+        }
+        .data-plan-list {
+            display: none;
+            margin-top: 10px;
+        }
+        .data-plan-list label {
+            font-size: 14px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .data-plan-list select {
+            width: 100%;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Data For All Network</h1>
+        <p>Buy Data</p>
+    </header>
+
+    <div class="container">
+        <h2>Data Purchase Details</h2>
+
+        <!-- Form for MTN -->
+        <form action="#" method="post" id="mtn-form">
+            <div class="form-group">
+                <label for="network">Select Network:</label>
+                <select id="network" name="network" onchange="handleNetworkSelection(this)">
+                    <option value="select">-- Select --</option>
+                    <option value="mtn">MTN</option>
+                    <option value="airtel">Airtel</option>
+                    <option value="glo">Glo</option>
+                    <option value="etisalat">Etisalat</option>
+                </select>
+            </div>
+
+            <div id="form-details">
+                <!-- Common form fields -->
+                <div class="form-group">
+                    <label for="data-type">Select Type:</label>
+                    <select id="data-type" name="data-type" onchange="showPlans(this)">
+                        <option value="select">-- Select --</option>
+                        <option value="sme">SME</option>
+                        <option value="gifting">Gifting</option>
+                        <option value="corporate">Corporate</option>
+                    </select>
+                </div>
+
+                <!-- Choose Plan (Common to all types) -->
+                <div id="plan-selection" class="data-plan-list">
+                    <label for="plan">Choose Plan:</label>
+                    <select id="plan" name="plan">
+                        <!-- SME Plans -->
+                        <option value="500mb-sme" data-amount="150" class="sme">500 MB SME (N 150) (30 Days)</option>
+                        <option value="1gb-sme" data-amount="285" class="sme">1GB SME (N 285) (30 Days)</option>
+                        <option value="2gb-sme" data-amount="550" class="sme">2GB SME (N 550) (30 Days)</option>
+                        <option value="3gb-sme" data-amount="834" class="sme">3GB SME (N 834) (30 Days)</option>
+                        <option value="5gb-sme" data-amount="1365" class="sme">5GB SME (N 1,365) (30 Days)</option>
+                        <option value="10gb-sme" data-amount="2720" class="sme">10GB SME (N 2,720) (30 Days)</option>
+
+                        <!-- Gifting Plans -->
+                        <option value="1gb-gifting" data-amount="250" class="gifting">1GB Awoof Gifting (N 250) (1 Day)</option>
+                        <option value="3.5gb-gifting" data-amount="580" class="gifting">3.5GB Awoof Gifting (N 580) (2 Days)</option>
+                        <option value="15gb-gifting" data-amount="2600" class="gifting">15GB Awoof Gifting (N 2,600) (7 Days)</option>
+
+                        <!-- Corporate Plans -->
+                        <option value="500mb-corporate" data-amount="150" class="corporate">500 MB Corporate (N 150) (30 Days)</option>
+                        <option value="1gb-corporate" data-amount="291" class="corporate">1GB Corporate (N 291) (30 Days)</option>
+                        <option value="2gb-corporate" data-amount="572" class="corporate">2GB Corporate (N 572) (30 Days)</option>
+                        <option value="3gb-corporate" data-amount="878" class="corporate">3GB Corporate (N 878) (30 Days)</option>
+                        <option value="5gb-corporate" data-amount="1390" class="corporate">5GB Corporate (N 1,390) (30 Days)</option>
+                        <option value="10gb-corporate" data-amount="2800" class="corporate">10GB Corporate (N 2,800) (30 Days)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone-number">Phone Number:</label>
+                    <input type="text" id="phone-number" name="phone-number" pattern="^0\d{10}$" maxlength="11" placeholder="Enter phone number (11 digits starting with 0)" required oninput="validatePhoneNumber()">
+                    <div id="phone-error" class="error" style="display: none;">Phone number must be 11 digits and start with 0.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Amount To Pay:</label>
+                    <input type="number" id="amount" name="amount" placeholder="Amount will auto-update" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="pin">Transaction Pin:</label>
+                    <input type="password" id="pin" name="pin" placeholder="Enter Transaction Pin" required>
+                </div>
+
+                <button type="button" class="btn" id="submit-btn" onclick="processTransaction()" disabled>Confirm Transaction</button>
+            </div>
+        </form>
+
+        <!-- Airtel Form -->
+        <form action="airtel.html" method="get" id="airtel-form" style="display: none;"></form>
+        <!-- Glo Form -->
+        <form action="glo.html" method="get" id="glo-form" style="display: none;"></form>
+        <!-- Etisalat Form -->
+        <form action="etisalat.html" method="get" id="etisalat-form" style="display: none;"></form>
+    </div>
+
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
+            authDomain: "vbankmfv.firebaseapp.com",
+            projectId: "vbankmfv",
+            storageBucket: "vbankmfv.firebasestorage.app",
+            messagingSenderId: "920021461554",
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+            measurementId: "G-G37D2FP82T"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Check if the user is logged in
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            // Fetch user balance from Firestore
+            const userDoc = doc(db, "users", user.uid);
+            const docSnap = await getDoc(userDoc);
+            if (docSnap.exists()) {
+                const userBalance = docSnap.data().balance;
+                document.getElementById("balance").innerText = `Available Balance: N ${userBalance}`;
+            }
+        });
+
+        // Show plans based on selected data type
+        function showPlans(select) {
+            const selectedType = select.value;
+            const planSelection = document.getElementById("plan-selection");
+            planSelection.style.display = "block";
+        }
+
+        // Validate phone number
+        function validatePhoneNumber() {
+            const phoneNumber = document.getElementById("phone-number").value;
+            const submitButton = document.getElementById("submit-btn");
+            if (phoneNumber.length === 11 && phoneNumber.startsWith("0")) {
+                submitButton.disabled = false;
+            } else {
+                submitButton.disabled = true;
+            }
+        }
+
+        // Process transaction
+        async function processTransaction() {
+            const user = auth.currentUser;
+            const selectedPlan = document.getElementById("plan").value;
+            const amountToPay = document.getElementById("amount").value;
+
+            const userDoc = doc(db, "users", user.uid);
+            const docSnap = await getDoc(userDoc);
+
+            if (docSnap.exists()) {
+                const userBalance = docSnap.data().balance;
+
+                if (userBalance >= amountToPay) {
+                    const newBalance = userBalance - amountToPay;
+                    await updateDoc(userDoc, { balance: newBalance });
+
+                    // Redirect to receipt.html after success
+                    window.location.href = "receipt.html";
+                } else {
+                    alert(`Insufficient balance. Available balance: N ${userBalance}`);
+                }
+            }
+        }
+
+        // Handle network selection
+        function handleNetworkSelection(select) {
+            const selectedNetwork = select.value;
+            const forms = {
+                mtn: document.getElementById('mtn-form'),
+                airtel: document.getElementById('airtel-form'),
+                glo: document.getElementById('glo-form'),
+                etisalat: document.getElementById('etisalat-form')
+            };
+
+            for (let network in forms) {
+                forms[network].style.display = (network === selectedNetwork) ? 'block' : 'none';
+            }
+        }
+
+    </script>
+
+</body>
+</html>
