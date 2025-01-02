@@ -64,11 +64,10 @@
         .hidden {
             display: none;
         }
-        .loading-message {
-            color: green;
-            text-align: center;
-            font-size: 18px;
-            margin-top: 20px;
+        .status-message {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #2980b9;
         }
     </style>
 </head>
@@ -153,12 +152,12 @@
                 <div id="pin-error" class="error hidden">Incorrect pin. Please try again or <a href="pin.html">create pin</a>.</div>
             </div>
 
-            <!-- Submit Button -->
-            <button type="button" class="btn" id="submit-btn" onclick="processTransaction()" disabled>Confirm Transaction</button>
-        </form>
+            <!-- Buy Data Button -->
+            <button type="button" class="btn" id="submit-btn" onclick="buyData()" disabled>Buy Data</button>
 
-        <!-- Loading Message -->
-        <div id="loading-message" class="loading-message hidden">Please wait, confirming your transaction...</div>
+            <!-- Status Message -->
+            <div id="status-message" class="status-message hidden"></div>
+        </form>
     </div>
 
     <!-- Firebase SDKs -->
@@ -195,19 +194,18 @@
             }
         });
 
-        // Check if pin is correct and process transaction
-        async function processTransaction() {
-            if (!currentUser) {
-                window.location.href = "login.html";
-                return;
-            }
-
+        // Function to process the data purchase
+        async function buyData() {
             const phoneNumber = document.getElementById("phone-number").value;
             const amount = parseInt(document.getElementById("amount").value);
             const pin = document.getElementById("pin").value;
 
-            if (!amount) {
-                alert("Please select a valid plan.");
+            // Display "Please wait" status
+            document.getElementById("status-message").textContent = "Please wait, confirming your transaction...";
+            document.getElementById("status-message").classList.remove("hidden");
+
+            if (!currentUser) {
+                window.location.href = "login.html";
                 return;
             }
 
@@ -221,34 +219,32 @@
 
                 if (userPin === pin) {
                     if (userBalance >= amount) {
-                        // Show loading message
-                        document.getElementById("loading-message").classList.remove("hidden");
-                        // Disable the button
-                        document.getElementById("submit-btn").disabled = true;
-
-                        // Deduct the amount from user balance and store transaction data
+                        // Proceed with transaction
                         await setDoc(doc(db, "transactions", currentUser.uid + "_" + Date.now()), {
                             phoneNumber,
                             amount,
                             status: "Completed",
                             timestamp: Date.now(),
                         });
-                        // Update balance after transaction
+
+                        // Update user's balance
                         await setDoc(doc(db, "users", currentUser.uid), {
                             balance: userBalance - amount
                         });
 
-                        setTimeout(() => {
-                            window.location.href = "receipt.html"; // Redirect to receipt page
-                        }, 2000); // Wait for 2 seconds before redirecting
+                        // Update status message to success
+                        document.getElementById("status-message").textContent = "Transaction successful! Your data is being processed.";
                     } else {
-                        alert("Insufficient funds. Please fund your wallet.");
+                        // Insufficient funds
+                        document.getElementById("status-message").textContent = "Insufficient funds. Please fund your wallet.";
+                        document.getElementById("status-message").style.color = "red";
                     }
                 } else {
-                    document.getElementById("pin-error").classList.remove("hidden");
+                    document.getElementById("status-message").textContent = "Incorrect pin. Please try again or <a href='pin.html'>create pin</a>.";
+                    document.getElementById("status-message").style.color = "red";
                 }
             } else {
-                alert("User not found. Please check your phone number.");
+                document.getElementById("status-message").textContent = "User not found.";
             }
         }
 
