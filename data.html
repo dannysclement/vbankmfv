@@ -109,26 +109,12 @@
             <div class="form-group">
                 <label for="plan">Choose Plan:</label>
                 <select id="plan" name="plan">
-                    <!-- SME Plans -->
+                    <!-- Plans for all types -->
                     <option value="500mb-sme" data-amount="150" class="sme">500 MB SME (N 150) (30 Days)</option>
                     <option value="1gb-sme" data-amount="285" class="sme">1GB SME (N 285) (30 Days)</option>
                     <option value="2gb-sme" data-amount="550" class="sme">2GB SME (N 550) (30 Days)</option>
-                    <option value="3gb-sme" data-amount="834" class="sme">3GB SME (N 834) (30 Days)</option>
-                    <option value="5gb-sme" data-amount="1365" class="sme">5GB SME (N 1,365) (30 Days)</option>
-                    <option value="10gb-sme" data-amount="2720" class="sme">10GB SME (N 2,720) (30 Days)</option>
-
-                    <!-- Gifting Plans -->
-                    <option value="1gb-gifting" data-amount="250" class="gifting">1GB Awoof Gifting (N 250) (1 Day)</option>
-                    <option value="3.5gb-gifting" data-amount="580" class="gifting">3.5GB Awoof Gifting (N 580) (2 Days)</option>
-                    <option value="15gb-gifting" data-amount="2600" class="gifting">15GB Awoof Gifting (N 2,600) (7 Days)</option>
-
-                    <!-- Corporate Plans -->
+                    <option value="1gb-gifting" data-amount="250" class="gifting">1GB Gifting (N 250) (1 Day)</option>
                     <option value="500mb-corporate" data-amount="150" class="corporate">500 MB Corporate (N 150) (30 Days)</option>
-                    <option value="1gb-corporate" data-amount="291" class="corporate">1GB Corporate (N 291) (30 Days)</option>
-                    <option value="2gb-corporate" data-amount="572" class="corporate">2GB Corporate (N 572) (30 Days)</option>
-                    <option value="3gb-corporate" data-amount="878" class="corporate">3GB Corporate (N 878) (30 Days)</option>
-                    <option value="5gb-corporate" data-amount="1390" class="corporate">5GB Corporate (N 1,390) (30 Days)</option>
-                    <option value="10gb-corporate" data-amount="2800" class="corporate">10GB Corporate (N 2,800) (30 Days)</option>
                 </select>
             </div>
 
@@ -208,6 +194,13 @@
         function handleNetworkSelection() {
             const network = document.getElementById("network").value;
             filterPlans();
+            if (network === "airtel") {
+                window.location.href = "airtel.html";
+            } else if (network === "glo") {
+                window.location.href = "glo.html";
+            } else if (network === "etisalat") {
+                window.location.href = "etisalat.html";
+            }
         }
 
         function filterPlans() {
