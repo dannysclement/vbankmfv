@@ -235,35 +235,27 @@
             const amount = parseInt(document.getElementById("amount").value);
             const pin = document.getElementById("pin").value;
 
-            document.getElementById("status-message").textContent = "Please wait, confirming your transaction...";
-            document.getElementById("status-message").classList.remove("hidden");
+            document.getElementById("status-message").textContent = "Please wait, confirming your details...";
 
-            if (!currentUser) {
-                window.location.href = "login.html";
-                return;
-            }
+            const userDoc = await db.collection("users").doc(currentUser.uid).get();
 
-            const userDoc = db.collection("users").doc(currentUser.uid);
-            const docSnap = await userDoc.get();
+            if (userDoc.exists) {
+                const userBalance = userDoc.data().balance;
+                const userPin = userDoc.data().pin;
 
-            if (docSnap.exists) {
-                const userData = docSnap.data();
-                const userPin = userData.pin;
-                const userBalance = userData.balance;
-
-                if (userPin === pin) {
+                if (pin === userPin) {
                     if (userBalance >= amount) {
-                        // Deduct balance from Firestore before making API call
-                        await userDoc.update({
+                        // Deduct balance
+                        await userDoc.ref.update({
                             balance: userBalance - amount
                         });
 
-                        // Make API call to buy data
-                        const response = await fetch('https://chinedutopup.com.ng/api/data/', {
-                            method: 'GET',
+                        // Make API call
+                        const response = await fetch("https://chinedutopup.com.ng/api/data/", {
+                            method: "POST",
                             headers: {
-                                'Token': 'Token bC6p3CABlEv70AkICCCtA7o3exCAyfcxmBBqGcB9h35AAgA1x981CaJ54Hs21725471118',
-                                'Content-Type': 'application/json'
+                                "Content-Type": "application/json",
+                                "Token": "bC6p3CABlEv70AkICCCtA7o3exCAyfcxmBBqGcB9h35AAgA1x981CaJ54Hs21725471118"
                             },
                             body: JSON.stringify({
                                 network: "1", // Adjust network value based on user selection
@@ -291,7 +283,7 @@
                             document.getElementById("status-message").textContent = "Transaction successful!";
                         } else {
                             // Refund if transaction fails
-                            await userDoc.update({
+                            await userDoc.ref.update({
                                 balance: userBalance // Refund balance
                             });
                             document.getElementById("status-message").textContent = "Transaction failed, balance refunded.";
