@@ -97,7 +97,7 @@
             <!-- Data Type Selection -->
             <div class="form-group">
                 <label for="data-type">Select Data Type:</label>
-                <select id="data-type" name="data-type" onchange="filterPlans()">
+                <select id="data-type" name="data-type" onchange="filterPlans()" disabled>
                     <option value="select">-- Select --</option>
                     <option value="sme">SME</option>
                     <option value="gifting">Gifting</option>
@@ -108,7 +108,7 @@
             <!-- Plan Selection -->
             <div class="form-group">
                 <label for="plan">Choose Plan:</label>
-                <select id="plan" name="plan">
+                <select id="plan" name="plan" disabled>
                     <!-- SME Plans -->
                     <option value="500mb-sme" data-amount="150" class="sme">500 MB SME (N 150) (30 Days)</option>
                     <option value="1gb-sme" data-amount="285" class="sme">1GB SME (N 285) (30 Days)</option>
@@ -160,9 +160,8 @@
         </form>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
-        // Import Firebase SDKs
+        // Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
