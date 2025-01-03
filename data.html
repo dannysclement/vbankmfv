@@ -69,6 +69,11 @@
             font-size: 16px;
             color: #2980b9;
         }
+        .balance {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -80,6 +85,9 @@
 
     <div class="container">
         <h2>Data Purchase Details</h2>
+
+        <!-- Display User Balance -->
+        <div class="balance" id="balance">Loading Balance...</div>
 
         <form action="#" method="post" id="data-form">
             <!-- Network Selection -->
@@ -183,10 +191,21 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
+                fetchUserBalance();
             } else {
                 window.location.href = "login.html"; // Redirect to login if not authenticated
             }
         });
+
+        async function fetchUserBalance() {
+            if (currentUser) {
+                const userDoc = await db.collection("users").doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    const userBalance = userDoc.data().balance;
+                    document.getElementById("balance").textContent = `Your Balance: N ${userBalance}`;
+                }
+            }
+        }
 
         function validatePhoneNumber() {
             const phoneNumber = document.getElementById("phone-number").value;
@@ -284,19 +303,19 @@
                         } else {
                             // Refund if transaction fails
                             await userDoc.ref.update({
-                                balance: userBalance // Refund balance
+                                balance: userBalance + amount
                             });
-                            document.getElementById("status-message").textContent = "Transaction failed, balance refunded.";
+
+                            document.getElementById("status-message").textContent = "Transaction failed. Your balance has been refunded.";
                         }
                     } else {
-                        document.getElementById("status-message").textContent = "Insufficient balance!";
+                        document.getElementById("status-message").textContent = "Insufficient funds.";
                     }
                 } else {
-                    document.getElementById("pin-error").classList.remove("hidden");
+                    document.getElementById("status-message").textContent = "Incorrect PIN.";
                 }
             }
         }
     </script>
-
 </body>
 </html>
