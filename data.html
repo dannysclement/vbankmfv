@@ -220,6 +220,11 @@
 
                 if (userPin === pin) {
                     if (userBalance >= amount) {
+                        // Deduct balance before API call
+                        await setDoc(doc(db, "users", currentUser.uid), {
+                            balance: userBalance - amount
+                        });
+
                         // Proceed with API call to buy data
                         const response = await fetch('https://chinedutopup.com.ng/api/data/', {
                             method: 'GET',
@@ -240,14 +245,8 @@
 
                         // Check if the API call was successful
                         if (data.status === "success") {
-                            // Update status message to success
                             document.getElementById("status-message").textContent = "Transaction successful! Your data is being processed.";
                             
-                            // Update user balance in Firestore
-                            await setDoc(doc(db, "users", currentUser.uid), {
-                                balance: userBalance - amount
-                            });
-
                             // Store transaction in Firestore
                             await setDoc(doc(db, "transactions", currentUser.uid + "_" + Date.now()), {
                                 phoneNumber,
@@ -256,11 +255,15 @@
                                 timestamp: Date.now(),
                             });
                         } else {
+                            // Refund balance if the API fails
+                            await setDoc(doc(db, "users", currentUser.uid), {
+                                balance: userBalance
+                            });
+
                             document.getElementById("status-message").textContent = "Transaction failed. Please try again.";
                             document.getElementById("status-message").style.color = "red";
                         }
                     } else {
-                        // Insufficient funds
                         document.getElementById("status-message").textContent = "Insufficient funds. Please fund your wallet.";
                         document.getElementById("status-message").style.color = "red";
                     }
@@ -300,22 +303,17 @@
             }
         }
 
-        // Filter plans based on selected data type
+        // Filter plans based on data type
         function filterPlans() {
             const dataType = document.getElementById("data-type").value;
-            const plans = document.getElementById("plan").children;
+            const allOptions = document.querySelectorAll("#plan option");
 
-            for (let plan of plans) {
-                plan.style.display = "none";
-            }
-
-            if (dataType !== "select") {
-                for (let plan of plans) {
-                    if (plan.classList.contains(dataType)) {
-                        plan.style.display = "block";
-                    }
+            allOptions.forEach(option => {
+                option.style.display = "none";
+                if (option.classList.contains(dataType)) {
+                    option.style.display = "block";
                 }
-            }
+            });
         }
     </script>
 </body>
