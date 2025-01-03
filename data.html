@@ -188,6 +188,7 @@
 
         let currentUser = null;
 
+        // Listen for user authentication state
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
@@ -197,6 +198,7 @@
             }
         });
 
+        // Fetch user balance after login
         async function fetchUserBalance() {
             if (currentUser) {
                 const userDoc = await db.collection("users").doc(currentUser.uid).get();
