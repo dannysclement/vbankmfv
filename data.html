@@ -202,9 +202,31 @@
             }
         }
 
+        function handleNetworkSelection() {
+            const network = document.getElementById("network").value;
+            if (network === "airtel") {
+                window.location.href = "airtel.html";
+            } else if (network === "glo") {
+                window.location.href = "glo.html";
+            } else if (network === "etisalat") {
+                window.location.href = "etisalat.html";
+            }
+            filterPlans();
+        }
+
+        function filterPlans() {
+            const network = document.getElementById("network").value;
+            const dataType = document.getElementById("data-type").value;
+
+            const plans = document.querySelectorAll("#plan option");
+            plans.forEach(plan => {
+                plan.style.display = plan.classList.contains(network) || plan.classList.contains(dataType) ? "block" : "none";
+            });
+        }
+
         function updateAmount() {
-            const selectedPlan = document.getElementById("plan").value;
-            const amount = document.querySelector(`#plan option[value='${selectedPlan}']`).getAttribute("data-amount");
+            const plan = document.getElementById("plan");
+            const amount = plan.selectedOptions[0].getAttribute("data-amount");
             document.getElementById("amount").value = amount;
         }
 
@@ -231,7 +253,7 @@
 
                 if (userPin === pin) {
                     if (userBalance >= amount) {
-                        // Deduct balance before API call
+                        // Deduct balance from Firestore before making API call
                         await userDoc.update({
                             balance: userBalance - amount
                         });
@@ -255,8 +277,6 @@
 
                         if (data.status === "success") {
                             document.getElementById("status-message").textContent = "Transaction successful!";
-
-                            // Record transaction in Firestore
                             await db.collection("transactions").doc(currentUser.uid + "_" + Date.now()).set({
                                 phoneNumber,
                                 amount,
@@ -264,7 +284,7 @@
                                 timestamp: Date.now(),
                             });
                         } else {
-                            // Refund on failure
+                            // Refund balance on failure
                             await userDoc.update({
                                 balance: userBalance
                             });
