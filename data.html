@@ -188,7 +188,6 @@
 
         let currentUser = null;
 
-        // Listen for user authentication state
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
@@ -198,13 +197,15 @@
             }
         });
 
-        // Fetch user balance after login
+        // Fetch user balance
         async function fetchUserBalance() {
             if (currentUser) {
                 const userDoc = await db.collection("users").doc(currentUser.uid).get();
                 if (userDoc.exists) {
                     const userBalance = userDoc.data().balance;
                     document.getElementById("balance").textContent = `Your Balance: N ${userBalance}`;
+                } else {
+                    document.getElementById("balance").textContent = "Balance not found";
                 }
             }
         }
