@@ -258,17 +258,18 @@
                             balance: userBalance - amount
                         });
 
+                        // Make API call to buy data
                         const response = await fetch('https://chinedutopup.com.ng/api/data/', {
-                            method: 'POST',
+                            method: 'GET',
                             headers: {
                                 'Token': 'Token bC6p3CABlEv70AkICCCtA7o3exCAyfcxmBBqGcB9h35AAgA1x981CaJ54Hs21725471118',
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                network: "1", // Example: MTN network ID
+                                network: "1", // Adjust network value based on user selection
                                 phone: phoneNumber,
-                                ref: "9876543210",
-                                data_plan: "1", // Example: Plan ID
+                                ref: "9876543210", // Example ref; replace with unique ref
+                                data_plan: "1", // Adjust based on selected plan
                                 ported_number: false
                             })
                         });
@@ -276,29 +277,31 @@
                         const data = await response.json();
 
                         if (data.status === "success") {
-                            document.getElementById("status-message").textContent = "Transaction successful!";
-                            await db.collection("transactions").doc(currentUser.uid + "_" + Date.now()).set({
-                                phoneNumber,
+                            // Record successful transaction in Firestore
+                            await db.collection("transactions").add({
+                                userId: currentUser.uid,
+                                status: "success",
                                 amount,
-                                status: "Completed",
-                                timestamp: Date.now(),
-                            });
-                        } else {
-                            // Refund balance on failure
-                            await userDoc.update({
-                                balance: userBalance
+                                date: new Date(),
+                                network: document.getElementById("network").value,
+                                phone: phoneNumber,
+                                ref: "9876543210" // Example ref; replace with unique ref
                             });
 
-                            document.getElementById("status-message").textContent = "Transaction failed. Please try again.";
+                            document.getElementById("status-message").textContent = "Transaction successful!";
+                        } else {
+                            // Refund if transaction fails
+                            await userDoc.update({
+                                balance: userBalance // Refund balance
+                            });
+                            document.getElementById("status-message").textContent = "Transaction failed, balance refunded.";
                         }
                     } else {
-                        document.getElementById("status-message").textContent = "Insufficient funds. Please fund your wallet.";
+                        document.getElementById("status-message").textContent = "Insufficient balance!";
                     }
                 } else {
-                    document.getElementById("status-message").textContent = "Incorrect pin.";
+                    document.getElementById("pin-error").classList.remove("hidden");
                 }
-            } else {
-                document.getElementById("status-message").textContent = "User data not found.";
             }
         }
     </script>
