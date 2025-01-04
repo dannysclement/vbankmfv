@@ -83,7 +83,7 @@
     <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Firebase configuration
@@ -116,18 +116,16 @@
             if (user) {
                 currentUserUID = user.uid;
                 const userRef = doc(db, "users", currentUserUID);
-                
-                // Real-time listener for user balance
-                onSnapshot(userRef, (docSnapshot) => {
-                    if (docSnapshot.exists()) {
-                        userBalance = docSnapshot.data().balance;
-                        userPin = docSnapshot.data().pin;
-                        document.getElementById("userBalance").textContent = userBalance;
-                    } else {
-                        alert("User data not found, please complete your profile.");
-                        window.location.href = "profile.html";
-                    }
-                });
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    userBalance = userSnap.data().balance;
+                    userPin = userSnap.data().pin;
+                    document.getElementById("userBalance").textContent = userBalance;
+                } else {
+                    alert("User data not found, please complete your profile.");
+                    window.location.href = "profile.html";
+                }
             } else {
                 alert("You are not logged in!");
                 window.location.href = "login.html";
