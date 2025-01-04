@@ -41,8 +41,12 @@
     // Fetch user data when logged in
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Fetch user profile data from Firestore
-        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userUID = user.uid;
+
+        // Fetch user profile data from Firestore based on UID
+        const userDocRef = doc(db, "users", userUID);
+        const userDoc = await getDoc(userDocRef);
+
         if (userDoc.exists()) {
           const data = userDoc.data();
           form.firstName.value = data.firstName || '';
@@ -50,17 +54,23 @@
           form.lastName.value = data.lastName || '';
           form.username.value = data.username || '';
           form.email.value = user.email || '';
+
+          // Display profile picture if exists
           if (data.profilePic) {
             profileImage.src = data.profilePic;
           }
 
           // Fetch phone number in real-time
-          onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+          onSnapshot(userDocRef, (snapshot) => {
             if (snapshot.exists()) {
               phoneNumberInput.value = snapshot.data().phoneNumber || '';
             }
           });
+        } else {
+          console.log("No user data found");
         }
+      } else {
+        console.log("User is not logged in");
       }
     });
 
@@ -74,7 +84,8 @@
         profileImage.src = profilePicURL;
 
         // Update Firestore with the new profile picture URL
-        await updateDoc(doc(db, "users", auth.currentUser.uid), { profilePic: profilePicURL });
+        const userUID = auth.currentUser.uid;
+        await updateDoc(doc(db, "users", userUID), { profilePic: profilePicURL });
       }
     });
 
@@ -86,7 +97,8 @@
         lastName: form.lastName.value,
         username: form.username.value
       };
-      await updateDoc(doc(db, "users", auth.currentUser.uid), updates);
+      const userUID = auth.currentUser.uid;
+      await updateDoc(doc(db, "users", userUID), updates);
       alert('Profile updated successfully!');
     });
 
@@ -94,7 +106,8 @@
     savePinButton.addEventListener('click', async () => {
       const pin = pinInput.value;
       if (pin.length === 4) {
-        await updateDoc(doc(db, "users", auth.currentUser.uid), { pin });
+        const userUID = auth.currentUser.uid;
+        await updateDoc(doc(db, "users", userUID), { pin });
         alert('PIN updated successfully!');
       } else {
         alert('PIN must be 4 digits');
