@@ -83,7 +83,7 @@
     <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Firebase configuration
@@ -115,17 +115,20 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
+                // Real-time listener to fetch user data from Firestore
                 const userRef = doc(db, "users", currentUserUID);
-                const userSnap = await getDoc(userRef);
 
-                if (userSnap.exists()) {
-                    userBalance = userSnap.data().balance;
-                    userPin = userSnap.data().pin;
-                    document.getElementById("userBalance").textContent = userBalance;
-                } else {
-                    alert("User data not found, please complete your profile.");
-                    window.location.href = "profile.html";
-                }
+                onSnapshot(userRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        userBalance = userData.balance;
+                        userPin = userData.pin;
+                        document.getElementById("userBalance").textContent = userBalance;
+                    } else {
+                        alert("User data not found, please complete your profile.");
+                        window.location.href = "profile.html";
+                    }
+                });
             } else {
                 alert("You are not logged in!");
                 window.location.href = "login.html";
@@ -178,9 +181,7 @@
             const newBalance = userBalance - selectedPlanPrice;
             const userRef = doc(db, "users", currentUserUID);
 
-            // Update balance in Firestore
             await updateDoc(userRef, { balance: newBalance });
-            // Store purchase data in Firestore
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
                 phoneNumber: phoneNumber,
                 dataType: dataTypeSelect.value,
@@ -188,9 +189,6 @@
                 amountPaid: selectedPlanPrice,
                 timestamp: new Date().toISOString()
             });
-
-            // Update balance in the form
-            document.getElementById("userBalance").textContent = newBalance;
 
             alert("Purchase Successful!");
             window.location.href = "receipt.html";
