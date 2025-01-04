@@ -7,57 +7,51 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f5f5f5;
+            background: #f9f9f9;
             text-align: center;
-            padding: 20px;
         }
         .form-container {
-            max-width: 400px;
-            margin: auto;
+            margin: 50px auto;
             padding: 20px;
+            max-width: 400px;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        }
-        h2 {
-            color: #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         input, select, button {
             width: 100%;
             padding: 10px;
-            margin-top: 10px;
-            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .amount-container {
+            padding: 10px;
+            background: #e9e9e9;
             border-radius: 5px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
         }
         .error {
             color: red;
             font-size: 14px;
         }
-        .amount-container {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f9f9f9;
-            font-weight: bold;
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #218838;
         }
     </style>
 </head>
 <body>
-    <h2>Welcome to VBANKMFV</h2>
-    <p>If you have issues, <a href="contact.html">contact us</a>.</p>
-
+    <h1>Welcome to the Data Purchase Portal</h1>
+    <p>If you have any issues, <a href="contact.html">Contact Us</a>.</p>
+    
     <div class="form-container">
         <h2>Data Purchase Form</h2>
         <form id="dataForm">
             <label for="phoneNumber">Phone Number</label>
-            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter phone number" required>
+            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter Phone Number" required>
             <div class="error" id="phoneError"></div>
 
             <label for="network">Select Network</label>
@@ -80,75 +74,81 @@
                 <p>Amount to Pay: <span id="amountToPay">₦0</span></p>
             </div>
 
-            <label for="pin">Enter 4-Digit PIN</label>
+            <label for="pin">4-Digit PIN</label>
             <input type="password" id="pin" maxlength="4" required>
             <div class="error" id="pinError"></div>
 
             <button type="submit">Purchase Data</button>
         </form>
+        <p>Current Balance: ₦<span id="userBalance">Loading...</span></p>
     </div>
 
-    <!-- Firebase Configuration -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyA...",
+            apiKey: "AIzaSy*************",
             authDomain: "vbankmfv.firebaseapp.com",
             projectId: "vbankmfv",
             storageBucket: "vbankmfv.appspot.com",
             messagingSenderId: "920021461554",
-            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+            measurementId: "G-G37D2FP82T"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Fetch data plans
         const dataPlans = {
-            sme: [{ name: "SME 1GB", price: 260 }],
-            gifting: [{ name: "1GB Gifting", price: 280 }]
+            sme: [
+                { name: "SME 1GB", price: 260 },
+                { name: "SME 2GB", price: 520 }
+            ],
+            gifting: [
+                { name: "1GB Gifting", price: 280 },
+                { name: "2GB Gifting", price: 560 }
+            ]
         };
 
-        const dataForm = document.getElementById("dataForm");
-        const phoneNumberInput = document.getElementById("phoneNumber");
-        const dataTypeSelect = document.getElementById("dataType");
-        const dataPlanSelect = document.getElementById("dataPlan");
-        const amountToPay = document.getElementById("amountToPay");
-        const pinInput = document.getElementById("pin");
-
-        let currentUser = null;
+        let currentUserUID;
         let userBalance = 0;
+        let userPin = null;
 
-        // Restrict access if not logged in
+        // Ensure only logged-in users can access the page
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                currentUser = user;
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    userBalance = userDoc.data().balance;
-                    alert(`Welcome back! Your balance: ₦${userBalance}`);
+                currentUserUID = user.uid;
+                const userDoc = doc(db, "users", currentUserUID);
+                const userSnap = await getDoc(userDoc);
+                if (userSnap.exists()) {
+                    userBalance = userSnap.data().balance;
+                    userPin = userSnap.data().pin;
+                    document.getElementById('userBalance').textContent = userBalance;
                 } else {
                     alert("User data not found. Redirecting to profile setup.");
                     window.location.href = "profile.html";
                 }
             } else {
+                alert("You must be logged in to access this page.");
                 window.location.href = "login.html";
             }
         });
 
-        // Update data plans based on selection
-        dataTypeSelect.addEventListener("change", () => {
-            dataPlanSelect.innerHTML = `<option value="">Select Data Plan</option>`;
+        const dataTypeSelect = document.getElementById('dataType');
+        const dataPlanSelect = document.getElementById('dataPlan');
+        const amountToPay = document.getElementById('amountToPay');
+        const pinInput = document.getElementById('pin');
+
+        dataTypeSelect.addEventListener('change', () => {
             const selectedType = dataTypeSelect.value;
-            if (selectedType) {
+            dataPlanSelect.innerHTML = '<option value="">Select Data Plan</option>';
+            if (selectedType && dataPlans[selectedType]) {
                 dataPlans[selectedType].forEach(plan => {
-                    const option = document.createElement("option");
+                    const option = document.createElement('option');
                     option.value = plan.price;
                     option.textContent = `${plan.name} - ₦${plan.price}`;
                     dataPlanSelect.appendChild(option);
@@ -156,45 +156,43 @@
             }
         });
 
-        // Update amount on selecting a plan
-        dataPlanSelect.addEventListener("change", () => {
-            const selectedPlanPrice = dataPlanSelect.value;
-            amountToPay.textContent = `₦${selectedPlanPrice}`;
+        dataPlanSelect.addEventListener('change', () => {
+            const selectedPrice = dataPlanSelect.value;
+            amountToPay.textContent = `₦${selectedPrice}`;
         });
 
-        // Form submission handling
-        dataForm.addEventListener("submit", async (e) => {
+        document.getElementById('dataForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Validate phone number
-            const phoneNumber = phoneNumberInput.value;
-            if (!phoneNumber.startsWith("0") || phoneNumber.length !== 11) {
-                alert("Phone number must start with '0' and be 11 digits long.");
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const selectedNetwork = document.getElementById('network').value;
+            const selectedPlanPrice = Number(dataPlanSelect.value);
+            const enteredPin = pinInput.value;
+
+            if (phoneNumber.length !== 11 || phoneNumber[0] !== '0') {
+                alert("Phone number must be 11 digits and start with 0.");
                 return;
             }
 
-            const selectedPlanPrice = parseInt(dataPlanSelect.value);
-            const enteredPin = pinInput.value;
-
-            if (enteredPin.length !== 4 || isNaN(enteredPin)) {
-                alert("Invalid PIN. Please enter a 4-digit numeric PIN.");
+            if (enteredPin !== userPin) {
+                alert("Incorrect PIN. Please try again.");
                 return;
             }
 
             if (userBalance < selectedPlanPrice) {
-                alert("Insufficient balance! Please top up.");
+                alert("Insufficient balance. Please top up.");
                 return;
             }
 
-            // Deduct balance and save transaction
-            const userDocRef = doc(db, "users", currentUser.uid);
-            await updateDoc(userDocRef, {
-                balance: userBalance - selectedPlanPrice
+            // Deduct balance and update Firestore
+            const newBalance = userBalance - selectedPlanPrice;
+            await updateDoc(doc(db, "users", currentUserUID), {
+                balance: newBalance
             });
 
-            await setDoc(doc(db, "purchases", `${currentUser.uid}-${Date.now()}`), {
-                userId: currentUser.uid,
-                phoneNumber,
+            // Record purchase
+            await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
+                network: selectedNetwork,
                 dataType: dataTypeSelect.value,
                 dataPlan: dataPlanSelect.options[dataPlanSelect.selectedIndex].text,
                 amount: selectedPlanPrice,
