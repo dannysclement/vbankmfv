@@ -13,7 +13,6 @@
             align-items: center;
             flex-direction: column;
             height: 100vh;
-            text-align: center;
         }
         .form-container {
             background: white;
@@ -22,15 +21,14 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
             max-width: 400px;
             width: 100%;
-            margin-top: 20px;
         }
         h2 {
-            margin-bottom: 20px;
+            text-align: center;
         }
         label {
             font-weight: bold;
-            margin-bottom: 5px;
             display: block;
+            margin-bottom: 5px;
         }
         select, input {
             width: 100%;
@@ -46,49 +44,29 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
         }
         button:hover {
             background: #218838;
         }
-        .amount-container {
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            text-align: center;
-            font-weight: bold;
-        }
         .error {
             color: red;
             font-size: 14px;
-            margin-top: -10px;
-            margin-bottom: 10px;
         }
-        .welcome-message {
-            margin-top: 20px;
+        .amount-container {
+            text-align: center;
             font-size: 18px;
-            color: #333;
-        }
-        .assistance-link {
-            color: #007bff;
-            text-decoration: none;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <!-- Welcome message -->
-    <div class="welcome-message">
-        <p>Welcome to the Data Purchase Portal! If you have any issues, <a href="contact.html" class="assistance-link">contact us for assistance</a>.</p>
-    </div>
-
     <div class="form-container">
         <h2>Data Purchase Form</h2>
+
         <form id="dataForm">
             <!-- Phone Number -->
             <label for="phoneNumber">Phone Number</label>
-            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter phone number" required>
+            <input type="text" id="phoneNumber" maxlength="11" required>
             <div id="phoneError" class="error"></div>
 
             <!-- Select Network -->
@@ -97,7 +75,6 @@
                 <option value="">Select Network</option>
                 <option value="MTN">MTN</option>
             </select>
-            <div id="networkError" class="error"></div>
 
             <!-- Select Data Type -->
             <label for="dataType">Select Data Type</label>
@@ -107,23 +84,21 @@
                 <option value="gifting">Gifting</option>
                 <option value="corporate">Corporate</option>
             </select>
-            <div id="dataTypeError" class="error"></div>
 
             <!-- Select Data Plan -->
             <label for="dataPlan">Select Data Plan</label>
             <select id="dataPlan" required>
                 <option value="">Select Data Plan</option>
             </select>
-            <div id="dataPlanError" class="error"></div>
 
             <!-- Amount to Pay -->
             <div class="amount-container">
-                <p>Amount to Pay: <span id="amountToPay">₦0</span></p>
+                Amount to Pay: ₦<span id="amountToPay">0</span>
             </div>
 
-            <!-- 4-digit PIN -->
-            <label for="pin">Enter 4-Digit PIN</label>
-            <input type="password" id="pin" maxlength="4" pattern="\d{4}" placeholder="****" required>
+            <!-- PIN Input -->
+            <label for="pin">Enter 4-digit PIN</label>
+            <input type="password" id="pin" maxlength="4" required>
             <div id="pinError" class="error"></div>
 
             <!-- Submit Button -->
@@ -131,14 +106,12 @@
         </form>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase Integration -->
     <script type="module">
-        // Import the functions you need from Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -149,165 +122,89 @@
             measurementId: "G-G37D2FP82T"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        const dataPlans = {
-            sme: [
-                { name: "SME 1GB", price: 260, duration: "30 Days" }
-            ],
-            gifting: [
-                { name: "1GB Gifting", price: 280, duration: "30 Days" }
-            ],
-            corporate: [
-                { name: "1GB Corporate", price: 305, duration: "30 Days" }
-            ]
-        };
+        let userUID = null;
 
-        const dataTypeSelect = document.getElementById('dataType');
-        const dataPlanSelect = document.getElementById('dataPlan');
-        const form = document.getElementById('dataForm');
-        const amountToPay = document.getElementById('amountToPay');
-        const pinInput = document.getElementById('pin');
-        const phoneInput = document.getElementById('phoneNumber');
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userUID = user.uid;
+                const userDoc = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userDoc);
 
-        const networkError = document.getElementById('networkError');
-        const dataTypeError = document.getElementById('dataTypeError');
-        const dataPlanError = document.getElementById('dataPlanError');
-        const pinError = document.getElementById('pinError');
-        const phoneError = document.getElementById('phoneError');
-
-        let user = null;
-
-        // Check for User Authentication
-        onAuthStateChanged(auth, (currentUser) => {
-            if (currentUser) {
-                user = currentUser;
-                checkUserPin(user.uid);  // Check if the user has a PIN set
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    alert(`Your current balance: ₦${userData.balance}`);
+                    
+                    // Check PIN existence
+                    if (userData.pin) {
+                        const confirmReset = confirm("You already have a PIN. Do you want to reset it?");
+                        if (confirmReset) {
+                            window.location.href = "pin.html";
+                        }
+                    }
+                } else {
+                    alert("User not found. Please create a profile.");
+                    window.location.href = "profile.html";
+                }
             } else {
-                // Redirect to login if user is not logged in
+                alert("User not logged in.");
                 window.location.href = "login.html";
             }
         });
 
-        // Function to check if the user has a PIN set
-        async function checkUserPin(uid) {
-            const userDoc = doc(db, "users", uid);
-            const userSnap = await getDoc(userDoc);
+        // Data Plans Configuration
+        const dataPlans = {
+            sme: [{ name: "SME 1GB", price: 260 }],
+            gifting: [{ name: "Gifting 1GB", price: 280 }],
+            corporate: [{ name: "Corporate 1GB", price: 305 }]
+        };
 
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                if (!userData.pin) {
-                    // If the user does not have a PIN, redirect to profile page
-                    alert("You haven't set a PIN. Please set your PIN now.");
-                    window.location.href = "profile.html";
-                }
-            }
-        }
-
-        // Event listener for data type selection
-        dataTypeSelect.addEventListener('change', function () {
-            const selectedType = dataTypeSelect.value;
+        document.getElementById("dataType").addEventListener("change", (e) => {
+            const selectedType = e.target.value;
+            const dataPlanSelect = document.getElementById("dataPlan");
             dataPlanSelect.innerHTML = '<option value="">Select Data Plan</option>';
-            networkError.textContent = '';
-            dataTypeError.textContent = '';
-            dataPlanError.textContent = '';
-            pinError.textContent = '';
 
-            if (selectedType && dataPlans[selectedType]) {
+            if (dataPlans[selectedType]) {
                 dataPlans[selectedType].forEach(plan => {
-                    const option = document.createElement('option');
-                    option.value = `${plan.name} - ₦${plan.price} (${plan.duration})`;
-                    option.textContent = `${plan.name} - ₦${plan.price} (${plan.duration})`;
+                    const option = document.createElement("option");
+                    option.value = `${plan.price}`;
+                    option.textContent = `${plan.name} - ₦${plan.price}`;
                     dataPlanSelect.appendChild(option);
                 });
             }
-
-            amountToPay.textContent = '₦0';
         });
 
-        // Event listener for data plan selection
-        dataPlanSelect.addEventListener('change', function () {
-            const selectedPlan = dataPlanSelect.value;
-            if (selectedPlan) {
-                const price = selectedPlan.match(/₦(\d+)/);
-                if (price) {
-                    amountToPay.textContent = `₦${price[1]}`;
-                }
-            }
+        document.getElementById("dataPlan").addEventListener("change", (e) => {
+            document.getElementById("amountToPay").textContent = e.target.value;
         });
 
-        // Form submission handler
-        form.addEventListener('submit', async function (e) {
+        document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-
-            let isValid = true;
-
-            // Phone number validation
-            const phoneNumber = phoneInput.value;
-            if (!phoneNumber || phoneNumber.length !== 11 || phoneNumber[0] !== '0' || isNaN(phoneNumber)) {
-                phoneError.textContent = 'Phone number must start with 0 and be 11 digits long.';
-                isValid = false;
-            } else {
-                phoneError.textContent = '';
-            }
-
-            // Validation checks
-            if (!document.getElementById('network').value) {
-                networkError.textContent = 'Please select a network.';
-                isValid = false;
-            }
-            if (!document.getElementById('dataType').value) {
-                dataTypeError.textContent = 'Please select a data type.';
-                isValid = false;
-            }
-            if (!document.getElementById('dataPlan').value) {
-                dataPlanError.textContent = 'Please select a data plan.';
-                isValid = false;
-            }
-            if (!pinInput.value || pinInput.value.length !== 4 || isNaN(pinInput.value)) {
-                pinError.textContent = 'Please enter a valid 4-digit PIN.';
-                isValid = false;
-            }
-
-            if (!isValid) return;
-
-            // Check user balance in Firestore
-            const userDoc = doc(db, "users", user.uid);
+            const phoneNumber = document.getElementById("phoneNumber").value;
+            const pin = document.getElementById("pin").value;
+            const selectedPlan = document.getElementById("dataPlan").value;
+            const userDoc = doc(db, "users", userUID);
             const userSnap = await getDoc(userDoc);
+
             if (userSnap.exists()) {
                 const userData = userSnap.data();
-                const userBalance = userData.balance || 0;
-                const selectedPlan = dataPlanSelect.value;
-                const price = parseInt(selectedPlan.match(/₦(\d+)/)[1]);
-
-                console.log('User Balance:', userBalance);
-                console.log('Selected Plan Price:', price);
-
-                if (userBalance < price) {
-                    alert("Insufficient balance. Please top up your account.");
+                if (userData.pin !== pin) {
+                    alert("Incorrect PIN. Try again.");
+                    return;
+                }
+                if (userData.balance < selectedPlan) {
+                    alert("Insufficient balance. Please top up.");
                     return;
                 }
 
-                // Deduct money from balance and update Firestore
                 await updateDoc(userDoc, {
-                    balance: userBalance - price
+                    balance: userData.balance - selectedPlan
                 });
 
-                // Store data purchase details in Firestore
-                const purchaseRef = doc(db, "purchases", `${user.uid}-${Date.now()}`);
-                await setDoc(purchaseRef, {
-                    userId: user.uid,
-                    network: document.getElementById('network').value,
-                    dataType: document.getElementById('dataType').value,
-                    dataPlan: selectedPlan,
-                    amount: price,
-                    date: new Date()
-                });
-
-                // Redirect to receipt.html
+                alert("Purchase successful!");
                 window.location.href = "receipt.html";
             }
         });
