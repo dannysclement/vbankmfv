@@ -13,6 +13,7 @@
             align-items: center;
             flex-direction: column;
             height: 100vh;
+            text-align: center;
         }
         .form-container {
             background: white;
@@ -23,12 +24,12 @@
             width: 100%;
         }
         h2 {
-            text-align: center;
+            margin-bottom: 20px;
         }
         label {
             font-weight: bold;
-            display: block;
             margin-bottom: 5px;
+            display: block;
         }
         select, input {
             width: 100%;
@@ -48,25 +49,38 @@
         button:hover {
             background: #218838;
         }
+        .amount-container {
+            padding: 10px;
+            border-radius: 5px;
+            background: #e9ecef;
+            margin-bottom: 20px;
+        }
         .error {
             color: red;
             font-size: 14px;
         }
-        .amount-container {
-            text-align: center;
+        .welcome-message {
             font-size: 18px;
-            font-weight: bold;
+            color: #333;
         }
     </style>
 </head>
 <body>
+    <!-- Welcome Message -->
+    <div class="welcome-message">
+        <p>Welcome to VBANKMFV! If you have issues, <a href="contact.html">contact us for assistance.</a></p>
+    </div>
+
+    <!-- Form Container -->
     <div class="form-container">
         <h2>Data Purchase Form</h2>
+        <!-- Displaying User Balance -->
+        <p>Current Balance: <strong>₦<span id="userBalance">0</span></strong></p>
 
         <form id="dataForm">
             <!-- Phone Number -->
             <label for="phoneNumber">Phone Number</label>
-            <input type="text" id="phoneNumber" maxlength="11" required>
+            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter phone number" required>
             <div id="phoneError" class="error"></div>
 
             <!-- Select Network -->
@@ -82,130 +96,109 @@
                 <option value="">Select Data Type</option>
                 <option value="sme">SME</option>
                 <option value="gifting">Gifting</option>
-                <option value="corporate">Corporate</option>
             </select>
 
             <!-- Select Data Plan -->
             <label for="dataPlan">Select Data Plan</label>
-            <select id="dataPlan" required>
-                <option value="">Select Data Plan</option>
-            </select>
+            <select id="dataPlan" required></select>
 
-            <!-- Amount to Pay -->
+            <!-- Amount Display -->
             <div class="amount-container">
-                Amount to Pay: ₦<span id="amountToPay">0</span>
+                <p>Amount to Pay: <strong>₦<span id="amountToPay">0</span></strong></p>
             </div>
 
             <!-- PIN Input -->
-            <label for="pin">Enter 4-digit PIN</label>
-            <input type="password" id="pin" maxlength="4" required>
-            <div id="pinError" class="error"></div>
-
-            <!-- Submit Button -->
+            <label for="pin">Enter 4-Digit PIN</label>
+            <input type="password" id="pin" maxlength="4" placeholder="****" required>
             <button type="submit">Purchase Data</button>
         </form>
     </div>
 
-    <!-- Firebase Integration -->
+    <!-- Firebase SDK Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
+            apiKey: "AIzaSy...",
             authDomain: "vbankmfv.firebaseapp.com",
             projectId: "vbankmfv",
             storageBucket: "vbankmfv.appspot.com",
             messagingSenderId: "920021461554",
             appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
-            measurementId: "G-G37D2FP82T"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let userUID = null;
+        let user = null;
+        let balance = 0;
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userUID = user.uid;
-                const userDoc = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userDoc);
-
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    alert(`Your current balance: ₦${userData.balance}`);
-                    
-                    // Check PIN existence
-                    if (userData.pin) {
-                        const confirmReset = confirm("You already have a PIN. Do you want to reset it?");
-                        if (confirmReset) {
-                            window.location.href = "pin.html";
+        onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                user = currentUser;
+                const userDocRef = doc(db, "users", user.uid);
+                
+                // Real-time balance update
+                onSnapshot(userDocRef, (doc) => {
+                    if (doc.exists()) {
+                        balance = doc.data().balance;
+                        document.getElementById('userBalance').textContent = balance;
+                        if (doc.data().pin) {
+                            const pinExists = confirm("You already have a PIN. Would you like to change it?");
+                            if (pinExists) {
+                                window.location.href = "pin.html";
+                            }
                         }
+                    } else {
+                        alert("No user data found, please complete your profile.");
+                        window.location.href = "me.html";
                     }
-                } else {
-                    alert("User not found. Please create a profile.");
-                    window.location.href = "profile.html";
-                }
+                });
             } else {
-                alert("User not logged in.");
+                alert("User not authenticated.");
                 window.location.href = "login.html";
             }
         });
 
-        // Data Plans Configuration
+        const form = document.getElementById('dataForm');
+        const dataPlanSelect = document.getElementById('dataPlan');
+        const amountToPay = document.getElementById('amountToPay');
+
         const dataPlans = {
             sme: [{ name: "SME 1GB", price: 260 }],
-            gifting: [{ name: "Gifting 1GB", price: 280 }],
-            corporate: [{ name: "Corporate 1GB", price: 305 }]
+            gifting: [{ name: "1GB Gifting", price: 280 }]
         };
 
-        document.getElementById("dataType").addEventListener("change", (e) => {
-            const selectedType = e.target.value;
-            const dataPlanSelect = document.getElementById("dataPlan");
+        document.getElementById('dataType').addEventListener('change', function () {
+            const selectedType = this.value;
             dataPlanSelect.innerHTML = '<option value="">Select Data Plan</option>';
-
-            if (dataPlans[selectedType]) {
-                dataPlans[selectedType].forEach(plan => {
-                    const option = document.createElement("option");
-                    option.value = `${plan.price}`;
-                    option.textContent = `${plan.name} - ₦${plan.price}`;
-                    dataPlanSelect.appendChild(option);
-                });
-            }
+            dataPlans[selectedType]?.forEach(plan => {
+                const option = document.createElement('option');
+                option.textContent = `${plan.name} - ₦${plan.price}`;
+                option.value = plan.price;
+                dataPlanSelect.appendChild(option);
+            });
         });
 
-        document.getElementById("dataPlan").addEventListener("change", (e) => {
-            document.getElementById("amountToPay").textContent = e.target.value;
+        dataPlanSelect.addEventListener('change', function () {
+            amountToPay.textContent = this.value;
         });
 
-        document.getElementById("dataForm").addEventListener("submit", async (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const phoneNumber = document.getElementById("phoneNumber").value;
-            const pin = document.getElementById("pin").value;
-            const selectedPlan = document.getElementById("dataPlan").value;
-            const userDoc = doc(db, "users", userUID);
-            const userSnap = await getDoc(userDoc);
-
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                if (userData.pin !== pin) {
-                    alert("Incorrect PIN. Try again.");
-                    return;
-                }
-                if (userData.balance < selectedPlan) {
-                    alert("Insufficient balance. Please top up.");
-                    return;
-                }
-
-                await updateDoc(userDoc, {
-                    balance: userData.balance - selectedPlan
+            const pin = document.getElementById('pin').value;
+            const selectedPlanPrice = parseInt(dataPlanSelect.value);
+            if (balance >= selectedPlanPrice) {
+                await updateDoc(doc(db, "users", user.uid), {
+                    balance: balance - selectedPlanPrice
                 });
-
-                alert("Purchase successful!");
+                alert("Data purchased successfully!");
                 window.location.href = "receipt.html";
+            } else {
+                alert("Insufficient balance! Please top up.");
             }
         });
     </script>
