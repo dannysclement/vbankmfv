@@ -31,7 +31,6 @@
         }
         .error {
             color: red;
-            font-size: 14px;
         }
         button {
             background: green;
@@ -46,26 +45,26 @@
 </head>
 <body>
     <h1>Welcome to VBANKMFV Data Purchase</h1>
-    <marquee behavior="scroll" direction="left">You are welcome! If you have any issues, please contact support.</marquee>
+    <marquee>You are welcome! If you have any issues, please contact support.</marquee>
 
     <div class="form-container">
         <h2>Purchase Data</h2>
         <form id="dataForm">
-            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter Phone Number" required>
+            <input type="text" id="phoneNumber" placeholder="Phone Number" maxlength="11" required>
             <div class="error" id="phoneError"></div>
 
-            <label for="network">Select Network</label>
+            <label>Select Network</label>
             <select id="network" required>
                 <option value="MTN">MTN</option>
             </select>
 
-            <label for="dataType">Select Data Type</label>
+            <label>Select Data Type</label>
             <select id="dataType" required>
                 <option value="sme">SME</option>
                 <option value="gifting">Gifting</option>
             </select>
 
-            <label for="dataPlan">Select Data Plan</label>
+            <label>Select Data Plan</label>
             <select id="dataPlan" required></select>
 
             <div class="amount-container">
@@ -87,7 +86,7 @@
         import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSy**************",
+            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
             projectId: "vbankmfv",
             storageBucket: "vbankmfv.appspot.com",
@@ -114,7 +113,7 @@
             ]
         };
 
-        // Authenticate and fetch user details
+        // Check if user is logged in and fetch data
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
@@ -125,7 +124,7 @@
                     userPin = userSnap.data().pin;
                     document.getElementById("userBalance").textContent = userBalance;
                 } else {
-                    alert("User data not found. Redirecting to profile setup.");
+                    alert("No user data found. Please set up your profile.");
                     window.location.href = "profile.html";
                 }
             } else {
@@ -134,7 +133,7 @@
             }
         });
 
-        // Populate data plans based on data type selection
+        // Update data plans based on selection
         const dataTypeSelect = document.getElementById("dataType");
         const dataPlanSelect = document.getElementById("dataPlan");
         const amountToPay = document.getElementById("amountToPay");
@@ -154,7 +153,7 @@
             amountToPay.textContent = `₦${dataPlanSelect.value}`;
         });
 
-        // Form Submission
+        // Form submission logic
         document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
