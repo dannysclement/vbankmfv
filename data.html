@@ -9,48 +9,55 @@
             font-family: Arial, sans-serif;
             background: #f5f5f5;
             text-align: center;
+            padding: 20px;
         }
         .form-container {
             max-width: 400px;
-            margin: 20px auto;
+            margin: auto;
             padding: 20px;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
         }
         input, select, button {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
         button {
-            background: #28a745;
+            background-color: #28a745;
             color: white;
-            border: none;
+            cursor: pointer;
         }
         button:hover {
-            background: #218838;
+            background-color: #218838;
         }
         .error {
             color: red;
             font-size: 14px;
         }
-        .balance-display {
+        .amount-container {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
             font-weight: bold;
-            color: #333;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to VBANKMFV Data Purchase</h1>
-    <p>If you have any issues, <a href="contact.html">Contact Us</a></p>
-    
+    <h2>Welcome to VBANKMFV</h2>
+    <p>If you have issues, <a href="contact.html">contact us</a>.</p>
+
     <div class="form-container">
-        <p class="balance-display">Your Balance: ₦<span id="userBalance">Loading...</span></p>
-        
+        <h2>Data Purchase Form</h2>
         <form id="dataForm">
             <label for="phoneNumber">Phone Number</label>
-            <input type="text" id="phoneNumber" maxlength="11" required>
+            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter phone number" required>
             <div class="error" id="phoneError"></div>
 
             <label for="network">Select Network</label>
@@ -67,11 +74,11 @@
             </select>
 
             <label for="dataPlan">Select Data Plan</label>
-            <select id="dataPlan" required>
-                <option value="">Select Data Plan</option>
-            </select>
+            <select id="dataPlan" required></select>
 
-            <label>Amount to Pay: ₦<span id="amountToPay">0</span></label>
+            <div class="amount-container">
+                <p>Amount to Pay: <span id="amountToPay">₦0</span></p>
+            </div>
 
             <label for="pin">Enter 4-Digit PIN</label>
             <input type="password" id="pin" maxlength="4" required>
@@ -81,14 +88,15 @@
         </form>
     </div>
 
-    <!-- Firebase Integration -->
+    <!-- Firebase Configuration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
+        // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyA1dzpe...",
+            apiKey: "AIzaSyA...",
             authDomain: "vbankmfv.firebaseapp.com",
             projectId: "vbankmfv",
             storageBucket: "vbankmfv.appspot.com",
@@ -96,61 +104,51 @@
             appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        const userBalanceElement = document.getElementById("userBalance");
+        // Fetch data plans
+        const dataPlans = {
+            sme: [{ name: "SME 1GB", price: 260 }],
+            gifting: [{ name: "1GB Gifting", price: 280 }]
+        };
+
+        const dataForm = document.getElementById("dataForm");
+        const phoneNumberInput = document.getElementById("phoneNumber");
+        const dataTypeSelect = document.getElementById("dataType");
+        const dataPlanSelect = document.getElementById("dataPlan");
+        const amountToPay = document.getElementById("amountToPay");
+        const pinInput = document.getElementById("pin");
+
         let currentUser = null;
+        let userBalance = 0;
 
-        // Fetch and validate user balance and PIN
-        async function fetchUserData(uid) {
-            const userRef = doc(db, "users", uid);
-            const docSnap = await getDoc(userRef);
-            if (docSnap.exists()) {
-                const userData = docSnap.data();
-                userBalanceElement.textContent = userData.balance || 0;
-                return userData;
-            } else {
-                alert("User data not found. Please create an account.");
-                window.location.href = "profile.html";
-            }
-        }
-
-        // Authenticate User
+        // Restrict access if not logged in
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                await fetchUserData(user.uid);
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    userBalance = userDoc.data().balance;
+                    alert(`Welcome back! Your balance: ₦${userBalance}`);
+                } else {
+                    alert("User data not found. Redirecting to profile setup.");
+                    window.location.href = "profile.html";
+                }
             } else {
-                alert("Please log in to continue.");
                 window.location.href = "login.html";
             }
         });
 
-        // Data Plans
-        const dataPlans = {
-            sme: [
-                { name: "SME 1GB", price: 260 },
-                { name: "SME 2GB", price: 500 }
-            ],
-            gifting: [
-                { name: "Gifting 1GB", price: 280 },
-                { name: "Gifting 2GB", price: 540 }
-            ]
-        };
-
-        const dataTypeSelect = document.getElementById('dataType');
-        const dataPlanSelect = document.getElementById('dataPlan');
-        const amountToPayElement = document.getElementById('amountToPay');
-
-        // Update data plans based on data type
-        dataTypeSelect.addEventListener('change', () => {
+        // Update data plans based on selection
+        dataTypeSelect.addEventListener("change", () => {
+            dataPlanSelect.innerHTML = `<option value="">Select Data Plan</option>`;
             const selectedType = dataTypeSelect.value;
-            dataPlanSelect.innerHTML = '<option value="">Select Data Plan</option>';
-            if (dataPlans[selectedType]) {
+            if (selectedType) {
                 dataPlans[selectedType].forEach(plan => {
-                    const option = document.createElement('option');
+                    const option = document.createElement("option");
                     option.value = plan.price;
                     option.textContent = `${plan.name} - ₦${plan.price}`;
                     dataPlanSelect.appendChild(option);
@@ -158,58 +156,52 @@
             }
         });
 
-        // Update amount to pay
-        dataPlanSelect.addEventListener('change', () => {
-            const selectedAmount = dataPlanSelect.value;
-            amountToPayElement.textContent = `₦${selectedAmount}`;
+        // Update amount on selecting a plan
+        dataPlanSelect.addEventListener("change", () => {
+            const selectedPlanPrice = dataPlanSelect.value;
+            amountToPay.textContent = `₦${selectedPlanPrice}`;
         });
 
-        // Form Submission
-        document.getElementById("dataForm").addEventListener("submit", async (event) => {
-            event.preventDefault();
+        // Form submission handling
+        dataForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-            const phoneNumber = document.getElementById("phoneNumber").value;
-            const pin = document.getElementById("pin").value;
-            const dataPlan = dataPlanSelect.value;
-            const price = parseInt(dataPlan);
-            const phoneError = document.getElementById("phoneError");
-            const pinError = document.getElementById("pinError");
-
-            // Phone validation
-            if (!phoneNumber.startsWith('0') || phoneNumber.length !== 11) {
-                phoneError.textContent = "Phone number must start with 0 and be 11 digits.";
-                return;
-            } else {
-                phoneError.textContent = "";
-            }
-
-            // Validate PIN
-            const userData = await fetchUserData(currentUser.uid);
-            if (userData.pin !== pin) {
-                pinError.textContent = "Incorrect PIN!";
-                return;
-            } else {
-                pinError.textContent = "";
-            }
-
-            // Balance check
-            if (userData.balance < price) {
-                alert("Insufficient balance. Please fund your wallet.");
+            // Validate phone number
+            const phoneNumber = phoneNumberInput.value;
+            if (!phoneNumber.startsWith("0") || phoneNumber.length !== 11) {
+                alert("Phone number must start with '0' and be 11 digits long.");
                 return;
             }
 
-            // Deduct balance and store data purchase
-            const newBalance = userData.balance - price;
-            await updateDoc(doc(db, "users", currentUser.uid), { balance: newBalance });
+            const selectedPlanPrice = parseInt(dataPlanSelect.value);
+            const enteredPin = pinInput.value;
+
+            if (enteredPin.length !== 4 || isNaN(enteredPin)) {
+                alert("Invalid PIN. Please enter a 4-digit numeric PIN.");
+                return;
+            }
+
+            if (userBalance < selectedPlanPrice) {
+                alert("Insufficient balance! Please top up.");
+                return;
+            }
+
+            // Deduct balance and save transaction
+            const userDocRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userDocRef, {
+                balance: userBalance - selectedPlanPrice
+            });
+
             await setDoc(doc(db, "purchases", `${currentUser.uid}-${Date.now()}`), {
                 userId: currentUser.uid,
                 phoneNumber,
-                network: document.getElementById('network').value,
                 dataType: dataTypeSelect.value,
-                amount: price
+                dataPlan: dataPlanSelect.options[dataPlanSelect.selectedIndex].text,
+                amount: selectedPlanPrice,
+                date: new Date().toISOString()
             });
 
-            alert("Purchase Successful!");
+            alert("Data purchase successful!");
             window.location.href = "receipt.html";
         });
     </script>
