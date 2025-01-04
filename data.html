@@ -83,7 +83,7 @@
     <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Firebase configuration
@@ -115,20 +115,20 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
-                const userRef = doc(db, "users", currentUserUID);
 
-                // Real-time listener to fetch balance from Firestore
-                onSnapshot(userRef, (docSnapshot) => {
-                    if (docSnapshot.exists()) {
-                        const data = docSnapshot.data();
-                        userBalance = data.balance;
-                        userPin = data.pin;
-                        document.getElementById("userBalance").textContent = userBalance;
-                    } else {
-                        alert("User data not found, please complete your profile.");
-                        window.location.href = "profile.html";
-                    }
-                });
+                // Fetch balance from separate collection based on UID
+                const balanceRef = doc(db, "balances", currentUserUID);
+                const balanceDoc = await getDoc(balanceRef);
+
+                if (balanceDoc.exists()) {
+                    const balanceData = balanceDoc.data();
+                    userBalance = balanceData.balance || 0;
+                    userPin = balanceData.pin;
+                    document.getElementById("userBalance").textContent = userBalance;
+                } else {
+                    alert("Balance not found, please complete your profile.");
+                    window.location.href = "profile.html";
+                }
             } else {
                 alert("You are not logged in!");
                 window.location.href = "login.html";
@@ -179,10 +179,12 @@
             }
 
             const newBalance = userBalance - selectedPlanPrice;
-            const userRef = doc(db, "users", currentUserUID);
+            const balanceRef = doc(db, "balances", currentUserUID);
 
             // Deduct from balance and save the purchase data
-            await updateDoc(userRef, { balance: newBalance });
+            await updateDoc(balanceRef, { balance: newBalance });
+
+            // Save the purchase in the purchases collection
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
                 phoneNumber: phoneNumber,
                 dataType: dataTypeSelect.value,
