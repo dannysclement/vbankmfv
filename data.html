@@ -178,7 +178,9 @@
             const newBalance = userBalance - selectedPlanPrice;
             const userRef = doc(db, "users", currentUserUID);
 
+            // Update balance in Firestore
             await updateDoc(userRef, { balance: newBalance });
+            // Store purchase data in Firestore
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
                 phoneNumber: phoneNumber,
                 dataType: dataTypeSelect.value,
@@ -186,6 +188,9 @@
                 amountPaid: selectedPlanPrice,
                 timestamp: new Date().toISOString()
             });
+
+            // Update balance in the form
+            document.getElementById("userBalance").textContent = newBalance;
 
             alert("Purchase Successful!");
             window.location.href = "receipt.html";
