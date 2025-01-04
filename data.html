@@ -116,12 +116,12 @@
             if (user) {
                 currentUserUID = user.uid;
                 const userRef = doc(db, "users", currentUserUID);
-
-                // Listen to balance changes in real-time
-                onSnapshot(userRef, (userSnap) => {
-                    if (userSnap.exists()) {
-                        userBalance = userSnap.data().balance;
-                        userPin = userSnap.data().pin;
+                
+                // Real-time listener for user balance
+                onSnapshot(userRef, (docSnapshot) => {
+                    if (docSnapshot.exists()) {
+                        userBalance = docSnapshot.data().balance;
+                        userPin = docSnapshot.data().pin;
                         document.getElementById("userBalance").textContent = userBalance;
                     } else {
                         alert("User data not found, please complete your profile.");
