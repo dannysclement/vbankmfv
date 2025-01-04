@@ -83,7 +83,7 @@
     <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Firebase configuration
@@ -115,20 +115,17 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
-                // Real-time listener to fetch user data from Firestore
                 const userRef = doc(db, "users", currentUserUID);
+                const userSnap = await getDoc(userRef);
 
-                onSnapshot(userRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        userBalance = userData.balance;
-                        userPin = userData.pin;
-                        document.getElementById("userBalance").textContent = userBalance;
-                    } else {
-                        alert("User data not found, please complete your profile.");
-                        window.location.href = "profile.html";
-                    }
-                });
+                if (userSnap.exists()) {
+                    userBalance = userSnap.data().balance;
+                    userPin = userSnap.data().pin;
+                    document.getElementById("userBalance").textContent = userBalance;
+                } else {
+                    alert("User data not found, please complete your profile.");
+                    window.location.href = "profile.html";
+                }
             } else {
                 alert("You are not logged in!");
                 window.location.href = "login.html";
@@ -163,25 +160,32 @@
             const selectedPlanPrice = Number(dataPlanSelect.value);
             const enteredPin = document.getElementById("pin").value;
 
+            // Phone Number validation
             if (!/^[0]\d{10}$/.test(phoneNumber)) {
                 alert("Phone number must be 11 digits starting with 0");
                 return;
             }
 
+            // PIN verification
             if (enteredPin !== userPin) {
                 alert("Incorrect PIN.");
                 return;
             }
 
+            // Balance verification
             if (userBalance < selectedPlanPrice) {
                 alert("Insufficient balance. Please fund your wallet.");
                 return;
             }
 
+            // Deduct balance and save purchase to Firestore
             const newBalance = userBalance - selectedPlanPrice;
             const userRef = doc(db, "users", currentUserUID);
 
+            // Update balance in Firestore
             await updateDoc(userRef, { balance: newBalance });
+
+            // Log purchase to Firestore
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
                 phoneNumber: phoneNumber,
                 dataType: dataTypeSelect.value,
@@ -190,6 +194,7 @@
                 timestamp: new Date().toISOString()
             });
 
+            // Show success and redirect to receipt page
             alert("Purchase Successful!");
             window.location.href = "receipt.html";
         });
