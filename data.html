@@ -115,12 +115,16 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
+
+                // Fetch user balance and PIN from Firestore
                 const userRef = doc(db, "users", currentUserUID);
                 const userSnap = await getDoc(userRef);
 
                 if (userSnap.exists()) {
                     userBalance = userSnap.data().balance;
                     userPin = userSnap.data().pin;
+
+                    // Update the user balance on the page
                     document.getElementById("userBalance").textContent = userBalance;
                 } else {
                     alert("User data not found, please complete your profile.");
@@ -160,32 +164,28 @@
             const selectedPlanPrice = Number(dataPlanSelect.value);
             const enteredPin = document.getElementById("pin").value;
 
-            // Phone Number validation
             if (!/^[0]\d{10}$/.test(phoneNumber)) {
                 alert("Phone number must be 11 digits starting with 0");
                 return;
             }
 
-            // PIN verification
             if (enteredPin !== userPin) {
                 alert("Incorrect PIN.");
                 return;
             }
 
-            // Balance verification
             if (userBalance < selectedPlanPrice) {
                 alert("Insufficient balance. Please fund your wallet.");
                 return;
             }
 
-            // Deduct balance and save purchase to Firestore
+            // Deduct balance and update Firestore
             const newBalance = userBalance - selectedPlanPrice;
             const userRef = doc(db, "users", currentUserUID);
 
-            // Update balance in Firestore
             await updateDoc(userRef, { balance: newBalance });
 
-            // Log purchase to Firestore
+            // Store purchase information in Firestore
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
                 phoneNumber: phoneNumber,
                 dataType: dataTypeSelect.value,
@@ -194,7 +194,6 @@
                 timestamp: new Date().toISOString()
             });
 
-            // Show success and redirect to receipt page
             alert("Purchase Successful!");
             window.location.href = "receipt.html";
         });
