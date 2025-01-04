@@ -8,7 +8,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
 
     // Firebase configuration
@@ -34,6 +34,9 @@
     const profilePicInput = document.getElementById('profilePicInput');
     const form = document.getElementById('profileForm');
     const saveButton = document.getElementById('saveButton');
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const pinInput = document.getElementById('pinInput');
+    const savePinButton = document.getElementById('savePinButton');
 
     // Fetch user data when logged in
     onAuthStateChanged(auth, async (user) => {
@@ -46,11 +49,17 @@
           form.middleName.value = data.middleName || '';
           form.lastName.value = data.lastName || '';
           form.username.value = data.username || '';
-          form.phoneNumber.value = data.phoneNumber || '';
           form.email.value = user.email || '';
           if (data.profilePic) {
             profileImage.src = data.profilePic;
           }
+
+          // Fetch phone number in real-time
+          onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+            if (snapshot.exists()) {
+              phoneNumberInput.value = snapshot.data().phoneNumber || '';
+            }
+          });
         }
       }
     });
@@ -75,11 +84,21 @@
         firstName: form.firstName.value,
         middleName: form.middleName.value,
         lastName: form.lastName.value,
-        username: form.username.value,
-        phoneNumber: form.phoneNumber.value
+        username: form.username.value
       };
       await updateDoc(doc(db, "users", auth.currentUser.uid), updates);
       alert('Profile updated successfully!');
+    });
+
+    // Save PIN to Firestore
+    savePinButton.addEventListener('click', async () => {
+      const pin = pinInput.value;
+      if (pin.length === 4) {
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { pin });
+        alert('PIN updated successfully!');
+      } else {
+        alert('PIN must be 4 digits');
+      }
     });
   </script>
   <style>
@@ -155,6 +174,9 @@
     button:hover {
       background-color: #218838;
     }
+    #pinInput {
+      width: 150px;
+    }
   </style>
 </head>
 <body>
@@ -179,13 +201,18 @@
       <input type="text" id="username">
       
       <label for="phoneNumber">Phone Number</label>
-      <input type="text" id="phoneNumber">
+      <input type="text" id="phoneNumber" readonly>
       
       <label for="email">Email Address</label>
       <input type="text" id="email" readonly>
       
       <button type="button" id="saveButton">Save Changes</button>
     </form>
+    <div style="margin-top: 20px;">
+      <label for="pinInput">PIN (4 digits)</label>
+      <input type="text" id="pinInput" maxlength="4" placeholder="Enter PIN">
+      <button type="button" id="savePinButton">Save PIN</button>
+    </div>
   </div>
 </body>
 </html>
