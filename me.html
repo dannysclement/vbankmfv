@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
+      authDomain: "vbankmfv.firebaseapp.com",
+      projectId: "vbankmfv",
+      storageBucket: "vbankmfv.firebasestorage.app",
+      messagingSenderId: "920021461554",
+      appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+      measurementId: "G-G37D2FP82T"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth();
+    const db = getFirestore();
+    const storage = getStorage();
+
+    // DOM Elements
+    const profileImage = document.getElementById('profileImage');
+    const profilePicInput = document.getElementById('profilePicInput');
+    const form = document.getElementById('profileForm');
+    const saveButton = document.getElementById('saveButton');
+
+    // Fetch user data when logged in
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Fetch user profile data from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          form.firstName.value = data.firstName || '';
+          form.middleName.value = data.middleName || '';
+          form.lastName.value = data.lastName || '';
+          form.username.value = data.username || '';
+          form.phoneNumber.value = data.phoneNumber || '';
+          form.email.value = user.email || '';
+          if (data.profilePic) {
+            profileImage.src = data.profilePic;
+          }
+        }
+      }
+    });
+
+    // Update profile picture in Firebase Storage
+    profilePicInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const storageRef = ref(storage, `profilePics/${auth.currentUser.uid}`);
+        await uploadBytes(storageRef, file);
+        const profilePicURL = await getDownloadURL(storageRef);
+        profileImage.src = profilePicURL;
+
+        // Update Firestore with the new profile picture URL
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { profilePic: profilePicURL });
+      }
+    });
+
+    // Save other profile changes to Firestore
+    saveButton.addEventListener('click', async () => {
+      const updates = {
+        firstName: form.firstName.value,
+        middleName: form.middleName.value,
+        lastName: form.lastName.value,
+        username: form.username.value,
+        phoneNumber: form.phoneNumber.value
+      };
+      await updateDoc(doc(db, "users", auth.currentUser.uid), updates);
+      alert('Profile updated successfully!');
+    });
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 500px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .profile-pic {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .profile-pic img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .profile-pic input {
+      display: none;
+    }
+    .profile-pic label {
+      margin-top: 10px;
+      display: inline-block;
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      margin: 10px 0 5px;
+      color: #555;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    input[readonly] {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>User Profile</h2>
+    <div class="profile-pic">
+      <img id="profileImage" src="default-profile.png" alt="Profile Picture">
+      <input type="file" id="profilePicInput">
+      <label for="profilePicInput">Change Picture</label>
+    </div>
+    <form id="profileForm">
+      <label for="firstName">First Name</label>
+      <input type="text" id="firstName">
+      
+      <label for="middleName">Middle Name</label>
+      <input type="text" id="middleName">
+      
+      <label for="lastName">Last Name</label>
+      <input type="text" id="lastName">
+      
+      <label for="username">Username</label>
+      <input type="text" id="username">
+      
+      <label for="phoneNumber">Phone Number</label>
+      <input type="text" id="phoneNumber">
+      
+      <label for="email">Email Address</label>
+      <input type="text" id="email" readonly>
+      
+      <button type="button" id="saveButton">Save Changes</button>
+    </form>
+  </div>
+</body>
+</html>
