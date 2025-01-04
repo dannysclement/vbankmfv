@@ -7,25 +7,26 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f9f9f9;
+            background: #f5f5f5;
             text-align: center;
         }
         .form-container {
+            max-width: 400px;
             margin: 50px auto;
             padding: 20px;
-            max-width: 400px;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
         input, select, button {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
+            margin-top: 10px;
         }
         .amount-container {
+            margin-top: 10px;
             padding: 10px;
-            background: #e9e9e9;
+            background: #e0e0e0;
             border-radius: 5px;
         }
         .error {
@@ -33,36 +34,33 @@
             font-size: 14px;
         }
         button {
-            background: #28a745;
+            background: green;
             color: white;
             border: none;
-            border-radius: 5px;
+            cursor: pointer;
         }
         button:hover {
-            background: #218838;
+            background: darkgreen;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to the Data Purchase Portal</h1>
-    <p>If you have any issues, <a href="contact.html">Contact Us</a>.</p>
-    
+    <h1>Welcome to VBANKMFV Data Purchase</h1>
+    <marquee behavior="scroll" direction="left">You are welcome! If you have any issues, please contact support.</marquee>
+
     <div class="form-container">
-        <h2>Data Purchase Form</h2>
+        <h2>Purchase Data</h2>
         <form id="dataForm">
-            <label for="phoneNumber">Phone Number</label>
             <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter Phone Number" required>
             <div class="error" id="phoneError"></div>
 
             <label for="network">Select Network</label>
             <select id="network" required>
-                <option value="">Select Network</option>
                 <option value="MTN">MTN</option>
             </select>
 
             <label for="dataType">Select Data Type</label>
             <select id="dataType" required>
-                <option value="">Select Data Type</option>
                 <option value="sme">SME</option>
                 <option value="gifting">Gifting</option>
             </select>
@@ -71,37 +69,39 @@
             <select id="dataPlan" required></select>
 
             <div class="amount-container">
-                <p>Amount to Pay: <span id="amountToPay">₦0</span></p>
+                <p>Amount to Pay: ₦<span id="amountToPay">0</span></p>
             </div>
 
-            <label for="pin">4-Digit PIN</label>
-            <input type="password" id="pin" maxlength="4" required>
+            <input type="password" id="pin" maxlength="4" placeholder="Enter 4-Digit PIN" required>
             <div class="error" id="pinError"></div>
 
-            <button type="submit">Purchase Data</button>
+            <p>Your Balance: ₦<span id="userBalance">Loading...</span></p>
+            <button type="submit">Purchase Now</button>
         </form>
-        <p>Current Balance: ₦<span id="userBalance">Loading...</span></p>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSy*************",
+            apiKey: "AIzaSy**************",
             authDomain: "vbankmfv.firebaseapp.com",
             projectId: "vbankmfv",
             storageBucket: "vbankmfv.appspot.com",
             messagingSenderId: "920021461554",
-            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
-            measurementId: "G-G37D2FP82T"
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUserUID = null;
+        let userBalance = 0;
+        let userPin = null;
 
         const dataPlans = {
             sme: [
@@ -109,16 +109,12 @@
                 { name: "SME 2GB", price: 520 }
             ],
             gifting: [
-                { name: "1GB Gifting", price: 280 },
-                { name: "2GB Gifting", price: 560 }
+                { name: "Gifting 1GB", price: 280 },
+                { name: "Gifting 2GB", price: 560 }
             ]
         };
 
-        let currentUserUID;
-        let userBalance = 0;
-        let userPin = null;
-
-        // Ensure only logged-in users can access the page
+        // Authenticate and fetch user details
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
@@ -127,55 +123,53 @@
                 if (userSnap.exists()) {
                     userBalance = userSnap.data().balance;
                     userPin = userSnap.data().pin;
-                    document.getElementById('userBalance').textContent = userBalance;
+                    document.getElementById("userBalance").textContent = userBalance;
                 } else {
                     alert("User data not found. Redirecting to profile setup.");
                     window.location.href = "profile.html";
                 }
             } else {
-                alert("You must be logged in to access this page.");
+                alert("You need to log in first.");
                 window.location.href = "login.html";
             }
         });
 
-        const dataTypeSelect = document.getElementById('dataType');
-        const dataPlanSelect = document.getElementById('dataPlan');
-        const amountToPay = document.getElementById('amountToPay');
-        const pinInput = document.getElementById('pin');
+        // Populate data plans based on data type selection
+        const dataTypeSelect = document.getElementById("dataType");
+        const dataPlanSelect = document.getElementById("dataPlan");
+        const amountToPay = document.getElementById("amountToPay");
 
-        dataTypeSelect.addEventListener('change', () => {
+        dataTypeSelect.addEventListener("change", () => {
             const selectedType = dataTypeSelect.value;
-            dataPlanSelect.innerHTML = '<option value="">Select Data Plan</option>';
-            if (selectedType && dataPlans[selectedType]) {
-                dataPlans[selectedType].forEach(plan => {
-                    const option = document.createElement('option');
-                    option.value = plan.price;
-                    option.textContent = `${plan.name} - ₦${plan.price}`;
-                    dataPlanSelect.appendChild(option);
-                });
-            }
+            dataPlanSelect.innerHTML = "<option value=''>Select Plan</option>";
+            dataPlans[selectedType].forEach(plan => {
+                const option = document.createElement("option");
+                option.value = plan.price;
+                option.textContent = `${plan.name} - ₦${plan.price}`;
+                dataPlanSelect.appendChild(option);
+            });
         });
 
-        dataPlanSelect.addEventListener('change', () => {
-            const selectedPrice = dataPlanSelect.value;
-            amountToPay.textContent = `₦${selectedPrice}`;
+        dataPlanSelect.addEventListener("change", () => {
+            amountToPay.textContent = `₦${dataPlanSelect.value}`;
         });
 
-        document.getElementById('dataForm').addEventListener('submit', async (e) => {
+        // Form Submission
+        document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const selectedNetwork = document.getElementById('network').value;
+            const phoneNumber = document.getElementById("phoneNumber").value;
+            const selectedNetwork = document.getElementById("network").value;
             const selectedPlanPrice = Number(dataPlanSelect.value);
-            const enteredPin = pinInput.value;
+            const enteredPin = document.getElementById("pin").value;
 
-            if (phoneNumber.length !== 11 || phoneNumber[0] !== '0') {
-                alert("Phone number must be 11 digits and start with 0.");
+            if (!/^[0]\d{10}$/.test(phoneNumber)) {
+                alert("Phone number must start with 0 and be 11 digits.");
                 return;
             }
 
             if (enteredPin !== userPin) {
-                alert("Incorrect PIN. Please try again.");
+                alert("Incorrect PIN. Try again.");
                 return;
             }
 
@@ -184,22 +178,19 @@
                 return;
             }
 
-            // Deduct balance and update Firestore
             const newBalance = userBalance - selectedPlanPrice;
-            await updateDoc(doc(db, "users", currentUserUID), {
-                balance: newBalance
-            });
+            await updateDoc(doc(db, "users", currentUserUID), { balance: newBalance });
 
-            // Record purchase
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
+                phoneNumber: phoneNumber,
                 network: selectedNetwork,
                 dataType: dataTypeSelect.value,
                 dataPlan: dataPlanSelect.options[dataPlanSelect.selectedIndex].text,
-                amount: selectedPlanPrice,
-                date: new Date().toISOString()
+                amountPaid: selectedPlanPrice,
+                timestamp: new Date().toISOString()
             });
 
-            alert("Data purchase successful!");
+            alert("Purchase Successful!");
             window.location.href = "receipt.html";
         });
     </script>
