@@ -31,6 +31,7 @@
         }
         .error {
             color: red;
+            font-size: 14px;
         }
         button {
             background: green;
@@ -45,26 +46,26 @@
 </head>
 <body>
     <h1>Welcome to VBANKMFV Data Purchase</h1>
-    <marquee>You are welcome! If you have any issues, please contact support.</marquee>
+    <marquee behavior="scroll" direction="left">You are welcome! If you have any issues, please contact support.</marquee>
 
     <div class="form-container">
         <h2>Purchase Data</h2>
         <form id="dataForm">
-            <input type="text" id="phoneNumber" placeholder="Phone Number" maxlength="11" required>
+            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter Phone Number" required>
             <div class="error" id="phoneError"></div>
 
-            <label>Select Network</label>
+            <label for="network">Select Network</label>
             <select id="network" required>
                 <option value="MTN">MTN</option>
             </select>
 
-            <label>Select Data Type</label>
+            <label for="dataType">Select Data Type</label>
             <select id="dataType" required>
                 <option value="sme">SME</option>
                 <option value="gifting">Gifting</option>
             </select>
 
-            <label>Select Data Plan</label>
+            <label for="dataPlan">Select Data Plan</label>
             <select id="dataPlan" required></select>
 
             <div class="amount-container">
@@ -82,9 +83,10 @@
     <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -94,46 +96,43 @@
             appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        let currentUserUID = null;
+        let currentUserUID;
         let userBalance = 0;
-        let userPin = null;
+        let userPin;
 
+        // Data plans setup
         const dataPlans = {
-            sme: [
-                { name: "SME 1GB", price: 260 },
-                { name: "SME 2GB", price: 520 }
-            ],
-            gifting: [
-                { name: "Gifting 1GB", price: 280 },
-                { name: "Gifting 2GB", price: 560 }
-            ]
+            sme: [{ name: "SME 1GB", price: 260 }, { name: "SME 2GB", price: 520 }],
+            gifting: [{ name: "Gifting 1GB", price: 280 }, { name: "Gifting 2GB", price: 560 }]
         };
 
-        // Check if user is logged in and fetch data
+        // Check if user is logged in
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
-                const userDoc = doc(db, "users", currentUserUID);
-                const userSnap = await getDoc(userDoc);
+                const userRef = doc(db, "users", currentUserUID);
+                const userSnap = await getDoc(userRef);
+
                 if (userSnap.exists()) {
                     userBalance = userSnap.data().balance;
                     userPin = userSnap.data().pin;
                     document.getElementById("userBalance").textContent = userBalance;
                 } else {
-                    alert("No user data found. Please set up your profile.");
+                    alert("User data not found, please complete your profile.");
                     window.location.href = "profile.html";
                 }
             } else {
-                alert("You need to log in first.");
+                alert("You are not logged in!");
                 window.location.href = "login.html";
             }
         });
 
-        // Update data plans based on selection
+        // Populate data plans based on data type
         const dataTypeSelect = document.getElementById("dataType");
         const dataPlanSelect = document.getElementById("dataPlan");
         const amountToPay = document.getElementById("amountToPay");
@@ -149,40 +148,39 @@
             });
         });
 
+        // Update amount on plan selection
         dataPlanSelect.addEventListener("change", () => {
             amountToPay.textContent = `₦${dataPlanSelect.value}`;
         });
 
-        // Form submission logic
+        // Form submission
         document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-
             const phoneNumber = document.getElementById("phoneNumber").value;
-            const selectedNetwork = document.getElementById("network").value;
             const selectedPlanPrice = Number(dataPlanSelect.value);
             const enteredPin = document.getElementById("pin").value;
 
             if (!/^[0]\d{10}$/.test(phoneNumber)) {
-                alert("Phone number must start with 0 and be 11 digits.");
+                alert("Phone number must be 11 digits starting with 0");
                 return;
             }
 
             if (enteredPin !== userPin) {
-                alert("Incorrect PIN. Try again.");
+                alert("Incorrect PIN.");
                 return;
             }
 
             if (userBalance < selectedPlanPrice) {
-                alert("Insufficient balance. Please top up.");
+                alert("Insufficient balance. Please fund your wallet.");
                 return;
             }
 
             const newBalance = userBalance - selectedPlanPrice;
-            await updateDoc(doc(db, "users", currentUserUID), { balance: newBalance });
+            const userRef = doc(db, "users", currentUserUID);
 
+            await updateDoc(userRef, { balance: newBalance });
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
                 phoneNumber: phoneNumber,
-                network: selectedNetwork,
                 dataType: dataTypeSelect.value,
                 dataPlan: dataPlanSelect.options[dataPlanSelect.selectedIndex].text,
                 amountPaid: selectedPlanPrice,
