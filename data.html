@@ -202,7 +202,7 @@
                 if (!userData.pin) {
                     // If the user does not have a PIN, redirect to profile page
                     alert("You haven't set a PIN. Please set your PIN now.");
-                    window.location.href = "me.html";
+                    window.location.href = "profile.html";
                 }
             }
         }
@@ -282,6 +282,9 @@
                 const userBalance = userData.balance || 0;
                 const selectedPlan = dataPlanSelect.value;
                 const price = parseInt(selectedPlan.match(/₦(\d+)/)[1]);
+
+                console.log('User Balance:', userBalance);
+                console.log('Selected Plan Price:', price);
 
                 if (userBalance < price) {
                     alert("Insufficient balance. Please top up your account.");
