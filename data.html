@@ -8,89 +8,57 @@
         body {
             font-family: Arial, sans-serif;
             background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            height: 100vh;
             text-align: center;
         }
         .form-container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
             max-width: 400px;
-            width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h2 {
-            margin-bottom: 20px;
-        }
-        label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
-        }
-        select, input {
+        input, select, button {
             width: 100%;
             padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            margin: 10px 0;
         }
         button {
             background: #28a745;
             color: white;
-            padding: 10px;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
         }
         button:hover {
             background: #218838;
-        }
-        .amount-container {
-            padding: 10px;
-            border-radius: 5px;
-            background: #e9ecef;
-            margin-bottom: 20px;
         }
         .error {
             color: red;
             font-size: 14px;
         }
-        .welcome-message {
-            font-size: 18px;
+        .balance-display {
+            font-weight: bold;
             color: #333;
         }
     </style>
 </head>
 <body>
-    <!-- Welcome Message -->
-    <div class="welcome-message">
-        <p>Welcome to VBANKMFV! If you have issues, <a href="contact.html">contact us for assistance.</a></p>
-    </div>
-
-    <!-- Form Container -->
+    <h1>Welcome to VBANKMFV Data Purchase</h1>
+    <p>If you have any issues, <a href="contact.html">Contact Us</a></p>
+    
     <div class="form-container">
-        <h2>Data Purchase Form</h2>
-        <!-- Displaying User Balance -->
-        <p>Current Balance: <strong>₦<span id="userBalance">0</span></strong></p>
-
+        <p class="balance-display">Your Balance: ₦<span id="userBalance">Loading...</span></p>
+        
         <form id="dataForm">
-            <!-- Phone Number -->
             <label for="phoneNumber">Phone Number</label>
-            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter phone number" required>
-            <div id="phoneError" class="error"></div>
+            <input type="text" id="phoneNumber" maxlength="11" required>
+            <div class="error" id="phoneError"></div>
 
-            <!-- Select Network -->
             <label for="network">Select Network</label>
             <select id="network" required>
                 <option value="">Select Network</option>
                 <option value="MTN">MTN</option>
             </select>
 
-            <!-- Select Data Type -->
             <label for="dataType">Select Data Type</label>
             <select id="dataType" required>
                 <option value="">Select Data Type</option>
@@ -98,108 +66,151 @@
                 <option value="gifting">Gifting</option>
             </select>
 
-            <!-- Select Data Plan -->
             <label for="dataPlan">Select Data Plan</label>
-            <select id="dataPlan" required></select>
+            <select id="dataPlan" required>
+                <option value="">Select Data Plan</option>
+            </select>
 
-            <!-- Amount Display -->
-            <div class="amount-container">
-                <p>Amount to Pay: <strong>₦<span id="amountToPay">0</span></strong></p>
-            </div>
+            <label>Amount to Pay: ₦<span id="amountToPay">0</span></label>
 
-            <!-- PIN Input -->
             <label for="pin">Enter 4-Digit PIN</label>
-            <input type="password" id="pin" maxlength="4" placeholder="****" required>
+            <input type="password" id="pin" maxlength="4" required>
+            <div class="error" id="pinError"></div>
+
             <button type="submit">Purchase Data</button>
         </form>
     </div>
 
-    <!-- Firebase SDK Integration -->
+    <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSy...",
+            apiKey: "AIzaSyA1dzpe...",
             authDomain: "vbankmfv.firebaseapp.com",
             projectId: "vbankmfv",
             storageBucket: "vbankmfv.appspot.com",
             messagingSenderId: "920021461554",
-            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let user = null;
-        let balance = 0;
+        const userBalanceElement = document.getElementById("userBalance");
+        let currentUser = null;
 
-        onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                user = currentUser;
-                const userDocRef = doc(db, "users", user.uid);
-                
-                // Real-time balance update
-                onSnapshot(userDocRef, (doc) => {
-                    if (doc.exists()) {
-                        balance = doc.data().balance;
-                        document.getElementById('userBalance').textContent = balance;
-                        if (doc.data().pin) {
-                            const pinExists = confirm("You already have a PIN. Would you like to change it?");
-                            if (pinExists) {
-                                window.location.href = "pin.html";
-                            }
-                        }
-                    } else {
-                        alert("No user data found, please complete your profile.");
-                        window.location.href = "me.html";
-                    }
-                });
+        // Fetch and validate user balance and PIN
+        async function fetchUserData(uid) {
+            const userRef = doc(db, "users", uid);
+            const docSnap = await getDoc(userRef);
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                userBalanceElement.textContent = userData.balance || 0;
+                return userData;
             } else {
-                alert("User not authenticated.");
+                alert("User data not found. Please create an account.");
+                window.location.href = "profile.html";
+            }
+        }
+
+        // Authenticate User
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await fetchUserData(user.uid);
+            } else {
+                alert("Please log in to continue.");
                 window.location.href = "login.html";
             }
         });
 
-        const form = document.getElementById('dataForm');
-        const dataPlanSelect = document.getElementById('dataPlan');
-        const amountToPay = document.getElementById('amountToPay');
-
+        // Data Plans
         const dataPlans = {
-            sme: [{ name: "SME 1GB", price: 260 }],
-            gifting: [{ name: "1GB Gifting", price: 280 }]
+            sme: [
+                { name: "SME 1GB", price: 260 },
+                { name: "SME 2GB", price: 500 }
+            ],
+            gifting: [
+                { name: "Gifting 1GB", price: 280 },
+                { name: "Gifting 2GB", price: 540 }
+            ]
         };
 
-        document.getElementById('dataType').addEventListener('change', function () {
-            const selectedType = this.value;
+        const dataTypeSelect = document.getElementById('dataType');
+        const dataPlanSelect = document.getElementById('dataPlan');
+        const amountToPayElement = document.getElementById('amountToPay');
+
+        // Update data plans based on data type
+        dataTypeSelect.addEventListener('change', () => {
+            const selectedType = dataTypeSelect.value;
             dataPlanSelect.innerHTML = '<option value="">Select Data Plan</option>';
-            dataPlans[selectedType]?.forEach(plan => {
-                const option = document.createElement('option');
-                option.textContent = `${plan.name} - ₦${plan.price}`;
-                option.value = plan.price;
-                dataPlanSelect.appendChild(option);
-            });
-        });
-
-        dataPlanSelect.addEventListener('change', function () {
-            amountToPay.textContent = this.value;
-        });
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const pin = document.getElementById('pin').value;
-            const selectedPlanPrice = parseInt(dataPlanSelect.value);
-            if (balance >= selectedPlanPrice) {
-                await updateDoc(doc(db, "users", user.uid), {
-                    balance: balance - selectedPlanPrice
+            if (dataPlans[selectedType]) {
+                dataPlans[selectedType].forEach(plan => {
+                    const option = document.createElement('option');
+                    option.value = plan.price;
+                    option.textContent = `${plan.name} - ₦${plan.price}`;
+                    dataPlanSelect.appendChild(option);
                 });
-                alert("Data purchased successfully!");
-                window.location.href = "receipt.html";
-            } else {
-                alert("Insufficient balance! Please top up.");
             }
+        });
+
+        // Update amount to pay
+        dataPlanSelect.addEventListener('change', () => {
+            const selectedAmount = dataPlanSelect.value;
+            amountToPayElement.textContent = `₦${selectedAmount}`;
+        });
+
+        // Form Submission
+        document.getElementById("dataForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const phoneNumber = document.getElementById("phoneNumber").value;
+            const pin = document.getElementById("pin").value;
+            const dataPlan = dataPlanSelect.value;
+            const price = parseInt(dataPlan);
+            const phoneError = document.getElementById("phoneError");
+            const pinError = document.getElementById("pinError");
+
+            // Phone validation
+            if (!phoneNumber.startsWith('0') || phoneNumber.length !== 11) {
+                phoneError.textContent = "Phone number must start with 0 and be 11 digits.";
+                return;
+            } else {
+                phoneError.textContent = "";
+            }
+
+            // Validate PIN
+            const userData = await fetchUserData(currentUser.uid);
+            if (userData.pin !== pin) {
+                pinError.textContent = "Incorrect PIN!";
+                return;
+            } else {
+                pinError.textContent = "";
+            }
+
+            // Balance check
+            if (userData.balance < price) {
+                alert("Insufficient balance. Please fund your wallet.");
+                return;
+            }
+
+            // Deduct balance and store data purchase
+            const newBalance = userData.balance - price;
+            await updateDoc(doc(db, "users", currentUser.uid), { balance: newBalance });
+            await setDoc(doc(db, "purchases", `${currentUser.uid}-${Date.now()}`), {
+                userId: currentUser.uid,
+                phoneNumber,
+                network: document.getElementById('network').value,
+                dataType: dataTypeSelect.value,
+                amount: price
+            });
+
+            alert("Purchase Successful!");
+            window.location.href = "receipt.html";
         });
     </script>
 </body>
