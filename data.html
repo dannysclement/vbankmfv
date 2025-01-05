@@ -83,7 +83,7 @@
     <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Firebase configuration
@@ -116,17 +116,17 @@
             if (user) {
                 currentUserUID = user.uid;
 
-                // Fetch balance from separate collection based on UID
-                const balanceRef = doc(db, "balances", currentUserUID);
-                const balanceDoc = await getDoc(balanceRef);
+                // Fetch balance and pin from separate collection based on UID
+                const userRef = doc(db, "users", currentUserUID);
+                const userDoc = await getDoc(userRef);
 
-                if (balanceDoc.exists()) {
-                    const balanceData = balanceDoc.data();
-                    userBalance = balanceData.balance || 0;
-                    userPin = balanceData.pin;
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    userBalance = userData.balance || 0;
+                    userPin = userData.pin; // User's PIN stored in Firestore
                     document.getElementById("userBalance").textContent = userBalance;
                 } else {
-                    alert("Balance not found, please complete your profile.");
+                    alert("User not found, please complete your profile.");
                     window.location.href = "profile.html";
                 }
             } else {
@@ -168,8 +168,10 @@
                 return;
             }
 
+            // Check if PIN entered matches the one stored in Firestore
             if (enteredPin !== userPin) {
-                alert("Incorrect PIN.");
+                alert("Incorrect PIN. Please reset your PIN.");
+                window.location.href = "reset-pin.html"; // Redirect to reset pin page
                 return;
             }
 
@@ -179,10 +181,10 @@
             }
 
             const newBalance = userBalance - selectedPlanPrice;
-            const balanceRef = doc(db, "balances", currentUserUID);
+            const userRef = doc(db, "users", currentUserUID);
 
             // Deduct from balance and save the purchase data
-            await updateDoc(balanceRef, { balance: newBalance });
+            await updateDoc(userRef, { balance: newBalance });
 
             // Save the purchase in the purchases collection
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
