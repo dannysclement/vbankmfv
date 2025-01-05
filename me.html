@@ -37,9 +37,9 @@
     const phoneNumberInput = document.getElementById('phoneNumber');
     const pinInput = document.getElementById('pinInput');
     const oldPinInput = document.getElementById('oldPinInput');
+    const newPinInput = document.getElementById('newPinInput');
     const savePinButton = document.getElementById('savePinButton');
-    const pinStatusMessage = document.getElementById('pinStatusMessage');
-    const pinSection = document.getElementById('pinSection');
+    const pinStatus = document.getElementById('pinStatus');
 
     // Fetch user data when logged in
     onAuthStateChanged(auth, async (user) => {
@@ -70,23 +70,17 @@
             }
           });
 
-          // Check if PIN is already set for the user
+          // Check if PIN already exists
           if (data.pin) {
-            pinSection.innerHTML = `
-              <label for="oldPinInput">Old PIN</label>
-              <input type="password" id="oldPinInput" placeholder="Enter your old PIN">
-              <label for="pinInput">New PIN (4 digits)</label>
-              <input type="password" id="pinInput" maxlength="4" placeholder="Enter your new PIN">
-              <button type="button" id="savePinButton">Change PIN</button>
-              <p id="pinStatusMessage">You already have a PIN. Change it below.</p>
-            `;
+            pinStatus.innerText = "You have already set a PIN.";
+            pinInput.style.display = "none";
+            oldPinInput.style.display = "block";
+            newPinInput.style.display = "block";
           } else {
-            pinSection.innerHTML = `
-              <label for="pinInput">Create a PIN (4 digits)</label>
-              <input type="password" id="pinInput" maxlength="4" placeholder="Enter your new PIN">
-              <button type="button" id="savePinButton">Create PIN</button>
-              <p id="pinStatusMessage">You don't have a PIN yet. Create one below.</p>
-            `;
+            pinStatus.innerText = "Set your PIN.";
+            pinInput.style.display = "block";
+            oldPinInput.style.display = "none";
+            newPinInput.style.display = "none";
           }
         } else {
           console.log("No user data found");
@@ -124,16 +118,8 @@
       alert('Profile updated successfully!');
     });
 
-    // Save or change PIN to Firestore
+    // Save PIN to Firestore (Check if PIN already exists)
     savePinButton.addEventListener('click', async () => {
-      const oldPin = oldPinInput.value;
-      const newPin = pinInput.value;
-
-      if (!newPin || newPin.length !== 4) {
-        alert('PIN must be 4 digits');
-        return;
-      }
-
       const userUID = auth.currentUser.uid;
       const userDocRef = doc(db, "users", userUID);
       const userDoc = await getDoc(userDocRef);
@@ -141,20 +127,29 @@
       if (userDoc.exists()) {
         const userData = userDoc.data();
         if (userData.pin) {
-          // Check if the old PIN matches the stored one
+          // If PIN already exists, prompt user to change PIN
+          const oldPin = oldPinInput.value;
           if (oldPin === userData.pin) {
-            await updateDoc(userDocRef, { pin: newPin });
-            alert('PIN changed successfully!');
+            const newPin = newPinInput.value;
+            if (newPin.length === 4) {
+              await updateDoc(userDocRef, { pin: newPin });
+              alert('PIN updated successfully!');
+            } else {
+              alert('PIN must be 4 digits');
+            }
           } else {
-            alert('Incorrect old PIN');
+            alert('Old PIN is incorrect');
           }
         } else {
-          // No PIN exists, create a new one
-          await updateDoc(userDocRef, { pin: newPin });
-          alert('PIN created successfully!');
+          // If PIN does not exist, create a new PIN
+          const pin = pinInput.value;
+          if (pin.length === 4) {
+            await updateDoc(userDocRef, { pin });
+            alert('PIN created successfully!');
+          } else {
+            alert('PIN must be 4 digits');
+          }
         }
-      } else {
-        alert('User not found');
       }
     });
   </script>
@@ -231,8 +226,14 @@
     button:hover {
       background-color: #218838;
     }
-    #pinInput {
-      width: 150px;
+    #pinInput, #oldPinInput, #newPinInput {
+      display: none;
+    }
+    #pinStatus {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 16px;
+      color: #888;
     }
   </style>
 </head>
@@ -265,8 +266,19 @@
       
       <button type="button" id="saveButton">Save Changes</button>
     </form>
-    <div id="pinSection" style="margin-top: 20px;">
-      <!-- PIN Section dynamically populated -->
+    
+    <div style="margin-top: 20px;">
+      <label for="pinInput">PIN (4 digits)</label>
+      <input type="text" id="pinInput" maxlength="4" placeholder="Enter PIN">
+      
+      <label for="oldPinInput">Old PIN</label>
+      <input type="text" id="oldPinInput" maxlength="4" placeholder="Enter Old PIN">
+      
+      <label for="newPinInput">New PIN</label>
+      <input type="text" id="newPinInput" maxlength="4" placeholder="Enter New PIN">
+      
+      <button type="button" id="savePinButton">Save PIN</button>
+      <p id="pinStatus"></p>
     </div>
   </div>
 </body>
