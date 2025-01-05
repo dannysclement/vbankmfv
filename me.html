@@ -8,8 +8,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
     // Firebase configuration
     const firebaseConfig = {
@@ -27,11 +26,8 @@
     const analytics = getAnalytics(app);
     const auth = getAuth();
     const db = getFirestore();
-    const storage = getStorage();
 
     // DOM Elements
-    const profileImage = document.getElementById('profileImage');
-    const profilePicInput = document.getElementById('profilePicInput');
     const form = document.getElementById('profileForm');
     const saveButton = document.getElementById('saveButton');
     const phoneNumberInput = document.getElementById('phoneNumber');
@@ -58,17 +54,8 @@
           form.username.value = data.username || '';
           form.email.value = user.email || '';
 
-          // Display profile picture if exists
-          if (data.profilePic) {
-            profileImage.src = data.profilePic;
-          }
-
           // Fetch phone number in real-time
-          onSnapshot(userDocRef, (snapshot) => {
-            if (snapshot.exists()) {
-              phoneNumberInput.value = snapshot.data().phoneNumber || '';
-            }
-          });
+          phoneNumberInput.value = data.phoneNumber || '';
 
           // Check if PIN already exists
           if (data.pin) {
@@ -87,21 +74,6 @@
         }
       } else {
         console.log("User is not logged in");
-      }
-    });
-
-    // Update profile picture in Firebase Storage
-    profilePicInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const storageRef = ref(storage, `profilePics/${auth.currentUser.uid}`);
-        await uploadBytes(storageRef, file);
-        const profilePicURL = await getDownloadURL(storageRef);
-        profileImage.src = profilePicURL;
-
-        // Update Firestore with the new profile picture URL
-        const userUID = auth.currentUser.uid;
-        await updateDoc(doc(db, "users", userUID), { profilePic: profilePicURL });
       }
     });
 
@@ -172,29 +144,6 @@
       text-align: center;
       color: #333;
     }
-    .profile-pic {
-      display: flex;
-      justify-content: center;
-      margin: 20px 0;
-    }
-    .profile-pic img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .profile-pic input {
-      display: none;
-    }
-    .profile-pic label {
-      margin-top: 10px;
-      display: inline-block;
-      background-color: #007bff;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
     form {
       display: flex;
       flex-direction: column;
@@ -240,11 +189,6 @@
 <body>
   <div class="container">
     <h2>User Profile</h2>
-    <div class="profile-pic">
-      <img id="profileImage" src="default-profile.png" alt="Profile Picture">
-      <input type="file" id="profilePicInput">
-      <label for="profilePicInput">Change Picture</label>
-    </div>
     <form id="profileForm">
       <label for="firstName">First Name</label>
       <input type="text" id="firstName">
