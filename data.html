@@ -7,31 +7,21 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f5f5f5;
             text-align: center;
+            background: #f5f5f5;
         }
         .form-container {
             max-width: 400px;
-            margin: 50px auto;
+            margin: auto;
             padding: 20px;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         input, select, button {
             width: 100%;
             padding: 10px;
             margin-top: 10px;
-        }
-        .amount-container {
-            margin-top: 10px;
-            padding: 10px;
-            background: #e0e0e0;
-            border-radius: 5px;
-        }
-        .error {
-            color: red;
-            font-size: 14px;
         }
         button {
             background: green;
@@ -42,18 +32,16 @@
         button:hover {
             background: darkgreen;
         }
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
-    <h1>Welcome to VBANKMFV Data Purchase</h1>
-    <marquee behavior="scroll" direction="left">You are welcome! If you have any issues, please contact support.</marquee>
-
+    <h1>VBANKMFV Data Purchase</h1>
     <div class="form-container">
-        <h2>Purchase Data</h2>
         <form id="dataForm">
-            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter Phone Number" required>
-            <div class="error" id="phoneError"></div>
-
+            <input type="text" id="phoneNumber" placeholder="Enter Phone Number" required maxlength="11">
             <label for="network">Select Network</label>
             <select id="network" required>
                 <option value="1">MTN</option>
@@ -61,22 +49,16 @@
                 <option value="3">Airtel</option>
                 <option value="4">9mobile</option>
             </select>
-
             <label for="dataPlan">Select Data Plan</label>
             <select id="dataPlan" required>
                 <option value="1">500MB - ₦160</option>
                 <option value="2">2GB - ₦520</option>
             </select>
-
-            <div class="amount-container">
-                <p>Amount to Pay: ₦<span id="amountToPay">0</span></p>
-            </div>
-
-            <input type="password" id="pin" maxlength="4" placeholder="Enter 4-Digit PIN" required>
-            <div class="error" id="pinError"></div>
-
+            <p>Amount: ₦<span id="amountToPay">0</span></p>
+            <input type="password" id="pin" placeholder="Enter 4-Digit PIN" required maxlength="4">
             <p>Your Balance: ₦<span id="userBalance">Loading...</span></p>
             <button type="submit">Purchase Now</button>
+            <p class="error" id="errorMessage"></p>
         </form>
     </div>
 
@@ -85,17 +67,16 @@
         import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
+            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
             projectId: "vbankmfv",
-            storageBucket: "vbankmfv.appspot.com",
+            storageBucket: "vbankmfv.firebasestorage.app",
             messagingSenderId: "920021461554",
-            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b",
+            measurementId: "G-G37D2FP82T"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
@@ -104,7 +85,6 @@
         let userBalance = 0;
         let userPin;
 
-        // Check if user is logged in
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
@@ -114,7 +94,7 @@
                     userBalance = balanceDoc.data().balance;
                     document.getElementById("userBalance").textContent = userBalance;
                 } else {
-                    alert("Balance not found. Please complete your profile.");
+                    alert("Balance not found!");
                     window.location.href = "profile.html";
                 }
 
@@ -124,48 +104,38 @@
                     userPin = userDoc.data().pin;
                 }
             } else {
-                alert("You are not logged in!");
+                alert("Not logged in!");
                 window.location.href = "login.html";
             }
         });
 
-        // Update amount to pay
         document.getElementById("dataPlan").addEventListener("change", () => {
             const selectedPlan = document.getElementById("dataPlan").value;
             document.getElementById("amountToPay").textContent = selectedPlan == "1" ? "260" : "520";
         });
 
-        // Form submission
         document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const phoneNumber = document.getElementById("phoneNumber").value;
-            const selectedPlanPrice = Number(document.getElementById("dataPlan").value == "1" ? 260 : 520);
-            const enteredPin = document.getElementById("pin").value;
             const network = document.getElementById("network").value;
             const dataPlan = document.getElementById("dataPlan").value;
+            const pin = document.getElementById("pin").value;
+            const amount = dataPlan == "1" ? 260 : 520;
+            const errorMessage = document.getElementById("errorMessage");
 
-            // Validate inputs
-            if (!/^[0]\d{10}$/.test(phoneNumber)) {
-                alert("Phone number must be 11 digits starting with 0.");
+            if (pin !== userPin) {
+                errorMessage.textContent = "Incorrect PIN.";
+                return;
+            }
+            if (userBalance < amount) {
+                errorMessage.textContent = "Insufficient balance.";
                 return;
             }
 
-            if (enteredPin !== userPin) {
-                alert("Incorrect PIN.");
-                return;
-            }
-
-            if (userBalance < selectedPlanPrice) {
-                alert("Insufficient balance. Please fund your wallet.");
-                return;
-            }
-
-            // Deduct balance before calling the API
-            const newBalance = userBalance - selectedPlanPrice;
+            const newBalance = userBalance - amount;
             const balanceRef = doc(db, "balances", currentUserUID);
             await updateDoc(balanceRef, { balance: newBalance });
 
-            // API call to ChineduTopup
             try {
                 const response = await fetch('https://chinedutopup.com.ng/api/data/', {
                     method: 'POST',
@@ -174,25 +144,23 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        "network": network,
-                        "phone": phoneNumber,
-                        "ref": Date.now().toString(),
-                        "data_plan": dataPlan,
-                        "ported_number": false
+                        network: network,
+                        phone: phoneNumber,
+                        ref: Date.now().toString(),
+                        data_plan: dataPlan,
+                        ported_number: false
                     })
                 });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.status === "success") {
+
+                const result = await response.json();
+                if (response.ok && result.status === "success") {
                     alert("Data purchase successful!");
                 } else {
-                    alert("Purchase failed: " + data.message);
+                    errorMessage.textContent = "API Error: " + result.message;
                     await updateDoc(balanceRef, { balance: userBalance });
                 }
             } catch (error) {
-                alert("Failed to connect to the server. Please try again.");
-                console.error(error);
+                errorMessage.textContent = "Failed to connect. Please try again.";
                 await updateDoc(balanceRef, { balance: userBalance });
             }
         });
