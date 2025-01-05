@@ -80,7 +80,6 @@
         </form>
     </div>
 
-    <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
@@ -114,40 +113,37 @@
         // Check if user is logged in
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                currentUserUID = user.uid;  // Get current logged-in user's UID
+                currentUserUID = user.uid;
 
-                // Fetch balance from separate collection based on UID
-                const balanceRef = doc(db, "balances", currentUserUID);  // Reference to the 'balances' collection with user UID
-                const balanceDoc = await getDoc(balanceRef);  // Get the document of the current user
-
-                if (balanceDoc.exists()) {  // If balance exists
-                    const balanceData = balanceDoc.data();  // Extract balance data
-                    userBalance = balanceData.balance || 0;  // Set the user's balance or default to 0
-                    document.getElementById("userBalance").textContent = userBalance;  // Display the balance
+                // Fetch balance from Firestore based on UID
+                const balanceRef = doc(db, "balances", currentUserUID);
+                const balanceDoc = await getDoc(balanceRef);
+                if (balanceDoc.exists()) {
+                    const balanceData = balanceDoc.data();
+                    userBalance = balanceData.balance || 0;
+                    document.getElementById("userBalance").textContent = userBalance;
                 } else {
                     alert("Balance not found, please complete your profile.");
-                    window.location.href = "profile.html";  // Redirect user to the profile page if balance doesn't exist
+                    window.location.href = "profile.html";
                 }
 
-                // Fetch PIN from 'users' collection
-                const userRef = doc(db, "users", currentUserUID);  // Reference to the 'users' collection with user UID
-                const userDoc = await getDoc(userRef);  // Get the document of the current user
-
-                if (userDoc.exists()) {  // If user data exists
-                    const userData = userDoc.data();  // Extract user data
-                    userPin = userData.pin;  // Fetch the PIN for the user
+                // Fetch PIN from Firestore
+                const userRef = doc(db, "users", currentUserUID);
+                const userDoc = await getDoc(userRef);
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    userPin = userData.pin;
                 } else {
                     alert("User data not found. Please complete your profile.");
-                    window.location.href = "profile.html";  // Redirect to profile page if user data doesn't exist
+                    window.location.href = "profile.html";
                 }
-
             } else {
                 alert("You are not logged in!");
-                window.location.href = "login.html";  // Redirect to login page if user is not logged in
+                window.location.href = "login.html";
             }
         });
 
-        // Populate data plans based on data type
+        // Populate data plans based on data type selection
         const dataTypeSelect = document.getElementById("dataType");
         const dataPlanSelect = document.getElementById("dataPlan");
         const amountToPay = document.getElementById("amountToPay");
@@ -163,84 +159,69 @@
             });
         });
 
-        // Update amount on plan selection
+        // Update amount when a data plan is selected
         dataPlanSelect.addEventListener("change", () => {
             amountToPay.textContent = `₦${dataPlanSelect.value}`;
         });
 
-        // Integrating the API
-        async function makeAPICall(phone, network, ref, data_plan, ported_number) {
-            const apiUrl = 'https://chinedutopup.com.ng/api/data/';
-            const apiKey = 'bC6p3CABlEv70AkICCCtA7o3exCAyfcxmBBqGcB9h35AAgA1x981CaJ54Hs21725471118';
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Token': `Token ${apiKey}`
-                },
-                body: JSON.stringify({
-                    network: network,
-                    phone: phone,
-                    ref: ref,
-                    data_plan: data_plan,
-                    ported_number: ported_number
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                alert('Data Purchase Successful!');
-            } else {
-                alert('Data purchase failed. Refund initiated.');
-                // Refund logic - Add refund API here
-                // Optionally, update the user balance here as well
-            }
-        }
-
-        // Form submission
+        // Form submission logic
         document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+
             const phoneNumber = document.getElementById("phoneNumber").value;
             const selectedPlanPrice = Number(dataPlanSelect.value);
             const enteredPin = document.getElementById("pin").value;
 
+            // Validate phone number format
             if (!/^[0]\d{10}$/.test(phoneNumber)) {
                 alert("Phone number must be 11 digits starting with 0");
                 return;
             }
 
+            // Validate PIN
             if (enteredPin !== userPin) {
                 alert("Incorrect PIN.");
                 return;
             }
 
+            // Check if user has enough balance
             if (userBalance < selectedPlanPrice) {
                 alert("Insufficient balance. Please fund your wallet.");
                 return;
             }
 
+            // Deduct balance for the purchase
             const newBalance = userBalance - selectedPlanPrice;
             const balanceRef = doc(db, "balances", currentUserUID);
-
-            // Deduct from balance and save the purchase data
             await updateDoc(balanceRef, { balance: newBalance });
 
-            // Save the purchase in the purchases collection
-            await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
-                phoneNumber: phoneNumber,
-                dataType: dataTypeSelect.value,
-                dataPlan: dataPlanSelect.options[dataPlanSelect.selectedIndex].text,
-                amountPaid: selectedPlanPrice,
-                timestamp: new Date().toISOString()
+            // Call the API to purchase data
+            const response = await fetch("https://chinedutopup.com.ng/api/data/", {
+                method: "POST",
+                headers: {
+                    "Token": "Token bC6p3CABlEv70AkICCCtA7o3exCAyfcxmBBqGcB9h35AAgA1x981CaJ54Hs21725471118",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    network: "1",  // Network ID (MTN)
+                    phone: phoneNumber,
+                    ref: Date.now().toString(),  // Unique reference
+                    data_plan: dataPlanSelect.value,  // Data plan ID or value
+                    ported_number: false
+                })
             });
 
-            // Make API call
-            await makeAPICall(phoneNumber, "1", "9876543210", dataPlanSelect.value, false);
+            const data = await response.json();
 
-            alert("Purchase Complete!");
-            window.location.href = "receipt.html";
+            // Handle API response
+            if (response.ok) {
+                alert("Data purchase successful!");
+                window.location.href = "receipt.html";
+            } else {
+                // Refund user if API fails
+                await updateDoc(balanceRef, { balance: userBalance });
+                alert("Purchase failed. Insufficient quantity or error in API. Amount refunded.");
+            }
         });
     </script>
 </body>
