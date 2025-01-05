@@ -190,7 +190,7 @@
                 return;
             }
 
-            // Deduct balance for the purchase
+            // Deduct balance before making the API call
             const newBalance = userBalance - selectedPlanPrice;
             const balanceRef = doc(db, "balances", currentUserUID);
             await updateDoc(balanceRef, { balance: newBalance });
@@ -217,6 +217,9 @@
             });
 
             const data = await response.json();
+
+            // Log the response for debugging
+            console.log("API Response:", data);
 
             // Handle API response
             if (response.ok && data.status === "success") {
