@@ -1,152 +1,218 @@
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-
-    // Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
-        authDomain: "vbankmfv.firebaseapp.com",
-        projectId: "vbankmfv",
-        storageBucket: "vbankmfv.appspot.com",
-        messagingSenderId: "920021461554",
-        appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    let currentUserUID;
-    let userBalance = 0;
-    let userPin;
-
-    // Data plans setup
-    const dataPlans = {
-        sme: [{ name: "SME 1GB", price: 160 }, { name: "SME 2GB", price: 520 }],
-        gifting: [{ name: "Gifting 1GB", price: 180 }, { name: "Gifting 2GB", price: 560 }]
-    };
-
-    // Check if user is logged in
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUserUID = user.uid;
-
-            // Fetch balance from Firestore based on UID
-            const balanceRef = doc(db, "balances", currentUserUID);
-            const balanceDoc = await getDoc(balanceRef);
-            if (balanceDoc.exists()) {
-                const balanceData = balanceDoc.data();
-                userBalance = balanceData.balance || 0;
-                document.getElementById("userBalance").textContent = userBalance;
-            } else {
-                alert("Balance not found, please complete your profile.");
-                window.location.href = "profile.html";
-            }
-
-            // Fetch PIN from Firestore
-            const userRef = doc(db, "users", currentUserUID);
-            const userDoc = await getDoc(userRef);
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                userPin = userData.pin;
-            } else {
-                alert("User data not found. Please complete your profile.");
-                window.location.href = "profile.html";
-            }
-        } else {
-            alert("You are not logged in!");
-            window.location.href = "login.html";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBANKMFV Data Purchase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            text-align: center;
         }
-    });
+        .form-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .amount-container {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+        }
+        button {
+            background: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: darkgreen;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to VBANKMFV Data Purchase</h1>
+    <marquee behavior="scroll" direction="left">You are welcome! If you have any issues, please contact support.</marquee>
 
-    // Populate data plans based on data type selection
-    const dataTypeSelect = document.getElementById("dataType");
-    const dataPlanSelect = document.getElementById("dataPlan");
-    const amountToPay = document.getElementById("amountToPay");
+    <div class="form-container">
+        <h2>Purchase Data</h2>
+        <form id="dataForm">
+            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter Phone Number" required>
+            <div class="error" id="phoneError"></div>
 
-    dataTypeSelect.addEventListener("change", () => {
-        const selectedType = dataTypeSelect.value;
-        dataPlanSelect.innerHTML = "<option value=''>Select Plan</option>";
-        dataPlans[selectedType].forEach(plan => {
-            const option = document.createElement("option");
-            option.value = plan.price;
-            option.textContent = `${plan.name} - ₦${plan.price}`;
-            dataPlanSelect.appendChild(option);
+            <label for="network">Select Network</label>
+            <select id="network" required>
+                <option value="MTN">MTN</option>
+            </select>
+
+            <label for="dataType">Select Data Type</label>
+            <select id="dataType" required>
+                <option value="sme">SME</option>
+                <option value="gifting">Gifting</option>
+            </select>
+
+            <label for="dataPlan">Select Data Plan</label>
+            <select id="dataPlan" required></select>
+
+            <div class="amount-container">
+                <p>Amount to Pay: ₦<span id="amountToPay">0</span></p>
+            </div>
+
+            <input type="password" id="pin" maxlength="4" placeholder="Enter 4-Digit PIN" required>
+            <div class="error" id="pinError"></div>
+
+            <p>Your Balance: ₦<span id="userBalance">Loading...</span></p>
+            <button type="submit">Purchase Now</button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1d...XJFXBc",
+            authDomain: "vbankmfv.firebaseapp.com",
+            projectId: "vbankmfv",
+            storageBucket: "vbankmfv.appspot.com",
+            messagingSenderId: "920021461554",
+            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentUserUID;
+        let userBalance = 0;
+        let userPin;
+
+        // Predefined data plans
+        const dataPlans = {
+            sme: [{ name: "SME 1GB", price: 160 }, { name: "SME 2GB", price: 520 }],
+            gifting: [{ name: "Gifting 1GB", price: 180 }, { name: "Gifting 2GB", price: 560 }]
+        };
+
+        // Handle user login and balance retrieval
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserUID = user.uid;
+                try {
+                    const balanceRef = doc(db, "balances", currentUserUID);
+                    const balanceDoc = await getDoc(balanceRef);
+                    if (balanceDoc.exists()) {
+                        userBalance = balanceDoc.data().balance;
+                        document.getElementById("userBalance").textContent = userBalance;
+                    }
+
+                    const userRef = doc(db, "users", currentUserUID);
+                    const userDoc = await getDoc(userRef);
+                    if (userDoc.exists()) {
+                        userPin = userDoc.data().pin;
+                    }
+                } catch (error) {
+                    alert("Error loading your data. Please try again.");
+                    console.error(error);
+                }
+            } else {
+                alert("You are not logged in!");
+                window.location.href = "login.html";
+            }
         });
-    });
 
-    // Update amount when a data plan is selected
-    dataPlanSelect.addEventListener("change", () => {
-        amountToPay.textContent = `₦${dataPlanSelect.value}`;
-    });
+        // Populate data plans based on the data type selected
+        const dataTypeSelect = document.getElementById("dataType");
+        const dataPlanSelect = document.getElementById("dataPlan");
+        const amountToPay = document.getElementById("amountToPay");
 
-    // Form submission logic
-    document.getElementById("dataForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const phoneNumber = document.getElementById("phoneNumber").value;
-        const selectedPlanPrice = Number(dataPlanSelect.value);
-        const enteredPin = document.getElementById("pin").value;
-
-        // Validate phone number format
-        if (!/^[0]\d{10}$/.test(phoneNumber)) {
-            alert("Phone number must be 11 digits starting with 0");
-            return;
-        }
-
-        // Validate PIN
-        if (enteredPin !== userPin) {
-            alert("Incorrect PIN.");
-            return;
-        }
-
-        // Check if user has enough balance
-        if (userBalance < selectedPlanPrice) {
-            alert("Insufficient balance. Please fund your wallet.");
-            return;
-        }
-
-        // Prepare API request data
-        const network = document.getElementById("network").value;
-        const dataType = document.getElementById("dataType").value;
-        const dataPlan = dataPlanSelect.selectedOptions[0].text;
-
-        try {
-            // Make the API call to deliver the data
-            const response = await fetch("https://chinedutopup.com.ng/api/data/", {
-                method: "POST",
-                headers: {
-                    "Token": "Token bC6p3CABlEv70AkICCCtA7o3exCAyfcxmBBqGcB9h35AAgA1x981CaJ54Hs21725471118",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    network: network,
-                    phone: phoneNumber,
-                    ref: Date.now().toString(),
-                    data_plan: dataPlan,
-                    ported_number: false
-                })
+        dataTypeSelect.addEventListener("change", () => {
+            const selectedType = dataTypeSelect.value;
+            dataPlanSelect.innerHTML = "<option value=''>Select Plan</option>";
+            dataPlans[selectedType].forEach(plan => {
+                const option = document.createElement("option");
+                option.value = plan.price;
+                option.textContent = `${plan.name} - ₦${plan.price}`;
+                dataPlanSelect.appendChild(option);
             });
+        });
 
-            const data = await response.json();
+        // Update amount when data plan changes
+        dataPlanSelect.addEventListener("change", () => {
+            amountToPay.textContent = `₦${dataPlanSelect.value}`;
+        });
 
-            // Check API response
-            if (response.ok && data.status === "success") {
-                // Deduct balance only after successful data delivery
-                const newBalance = userBalance - selectedPlanPrice;
-                const balanceRef = doc(db, "balances", currentUserUID);
-                await updateDoc(balanceRef, { balance: newBalance });
+        // Handle form submission and API call
+        document.getElementById("dataForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-                alert("Data purchase successful!");
-                window.location.href = "receipt.html";
-            } else {
-                // Refund the balance if the API fails
-                alert("Purchase failed. No quantity available or error in API.");
+            const phoneNumber = document.getElementById("phoneNumber").value;
+            const enteredPin = document.getElementById("pin").value;
+            const selectedPlanPrice = Number(dataPlanSelect.value);
+            const network = document.getElementById("network").value;
+            const dataType = document.getElementById("dataType").value;
+            const dataPlan = dataPlanSelect.selectedOptions[0].text;
+
+            if (!/^[0]\d{10}$/.test(phoneNumber)) {
+                alert("Phone number must be 11 digits starting with 0.");
+                return;
             }
-        } catch (error) {
-            alert("Error connecting to API. Please try again later.");
-        }
-    });
-</script>
+
+            if (enteredPin !== userPin) {
+                alert("Incorrect PIN.");
+                return;
+            }
+
+            if (userBalance < selectedPlanPrice) {
+                alert("Insufficient balance. Please fund your wallet.");
+                return;
+            }
+
+            try {
+                const response = await fetch("https://chinedutopup.com.ng/api/data/", {
+                    method: "POST",
+                    headers: {
+                        "Token": "Token bC6p3CABlEv70AkICCCtA7o3exCAyfcxmBBqGcB9h35AAgA1x981CaJ54Hs21725471118",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        network,
+                        phone: phoneNumber,
+                        ref: Date.now().toString(),
+                        data_plan: dataPlan,
+                        ported_number: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === "success") {
+                    await updateDoc(doc(db, "balances", currentUserUID), { balance: userBalance - selectedPlanPrice });
+                    alert("Data purchase successful!");
+                } else {
+                    alert("API Error: " + data.message);
+                }
+            } catch (error) {
+                alert("Failed to send data. Please try again.");
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
