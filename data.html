@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VBANKMFV Data Purchase</title>
+    <title>Data Purchase Form</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -80,14 +80,14 @@
         </form>
     </div>
 
+    <!-- JavaScript -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyA1d...XJFXBc",
+            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
             projectId: "vbankmfv",
             storageBucket: "vbankmfv.appspot.com",
@@ -95,7 +95,6 @@
             appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
@@ -104,32 +103,34 @@
         let userBalance = 0;
         let userPin;
 
-        // Predefined data plans
         const dataPlans = {
             sme: [{ name: "SME 1GB", price: 160 }, { name: "SME 2GB", price: 520 }],
             gifting: [{ name: "Gifting 1GB", price: 180 }, { name: "Gifting 2GB", price: 560 }]
         };
 
-        // Handle user login and balance retrieval
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
-                try {
-                    const balanceRef = doc(db, "balances", currentUserUID);
-                    const balanceDoc = await getDoc(balanceRef);
-                    if (balanceDoc.exists()) {
-                        userBalance = balanceDoc.data().balance;
-                        document.getElementById("userBalance").textContent = userBalance;
-                    }
 
-                    const userRef = doc(db, "users", currentUserUID);
-                    const userDoc = await getDoc(userRef);
-                    if (userDoc.exists()) {
-                        userPin = userDoc.data().pin;
-                    }
-                } catch (error) {
-                    alert("Error loading your data. Please try again.");
-                    console.error(error);
+                const balanceRef = doc(db, "balances", currentUserUID);
+                const balanceDoc = await getDoc(balanceRef);
+                if (balanceDoc.exists()) {
+                    const balanceData = balanceDoc.data();
+                    userBalance = balanceData.balance || 0;
+                    document.getElementById("userBalance").textContent = userBalance;
+                } else {
+                    alert("Balance not found, please complete your profile.");
+                    window.location.href = "profile.html";
+                }
+
+                const userRef = doc(db, "users", currentUserUID);
+                const userDoc = await getDoc(userRef);
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    userPin = userData.pin;
+                } else {
+                    alert("User data not found. Please complete your profile.");
+                    window.location.href = "profile.html";
                 }
             } else {
                 alert("You are not logged in!");
@@ -137,7 +138,6 @@
             }
         });
 
-        // Populate data plans based on the data type selected
         const dataTypeSelect = document.getElementById("dataType");
         const dataPlanSelect = document.getElementById("dataPlan");
         const amountToPay = document.getElementById("amountToPay");
@@ -153,24 +153,19 @@
             });
         });
 
-        // Update amount when data plan changes
         dataPlanSelect.addEventListener("change", () => {
             amountToPay.textContent = `₦${dataPlanSelect.value}`;
         });
 
-        // Handle form submission and API call
         document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const phoneNumber = document.getElementById("phoneNumber").value;
-            const enteredPin = document.getElementById("pin").value;
             const selectedPlanPrice = Number(dataPlanSelect.value);
-            const network = document.getElementById("network").value;
-            const dataType = document.getElementById("dataType").value;
-            const dataPlan = dataPlanSelect.selectedOptions[0].text;
+            const enteredPin = document.getElementById("pin").value;
 
             if (!/^[0]\d{10}$/.test(phoneNumber)) {
-                alert("Phone number must be 11 digits starting with 0.");
+                alert("Phone number must be 11 digits starting with 0");
                 return;
             }
 
@@ -192,10 +187,10 @@
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        network,
+                        network: "MTN",
                         phone: phoneNumber,
                         ref: Date.now().toString(),
-                        data_plan: dataPlan,
+                        data_plan: dataPlanSelect.selectedOptions[0].text,
                         ported_number: false
                     })
                 });
@@ -204,13 +199,12 @@
 
                 if (response.ok && data.status === "success") {
                     await updateDoc(doc(db, "balances", currentUserUID), { balance: userBalance - selectedPlanPrice });
-                    alert("Data purchase successful!");
+                    alert("Confirmed ✅: Data purchase successful!");
                 } else {
-                    alert("API Error: " + data.message);
+                    alert("API Error ❌: " + data.message);
                 }
             } catch (error) {
-                alert("Failed to send data. Please try again.");
-                console.error(error);
+                alert("Network Error ❌: Failed to connect to the server.");
             }
         });
     </script>
