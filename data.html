@@ -83,7 +83,7 @@
     <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Firebase configuration
@@ -114,24 +114,24 @@
         // Check if user is logged in
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                currentUserUID = user.uid;
+                currentUserUID = user.uid;  // Get current logged-in user's UID
 
-                // Fetch user data including balance and pin from Firestore
-                const userRef = doc(db, "users", currentUserUID);
-                const userDoc = await getDoc(userRef);
+                // Fetch balance from separate collection based on UID
+                const balanceRef = doc(db, "balances", currentUserUID);  // Reference to the 'balances' collection with user UID
+                const balanceDoc = await getDoc(balanceRef);  // Get the document of the current user
 
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    userBalance = userData.balance || 0;
-                    userPin = userData.pin || null;
-                    document.getElementById("userBalance").textContent = userBalance;
+                if (balanceDoc.exists()) {  // If balance exists
+                    const balanceData = balanceDoc.data();  // Extract balance data
+                    userBalance = balanceData.balance || 0;  // Set the user's balance or default to 0
+                    userPin = balanceData.pin;  // Fetch the PIN for the user
+                    document.getElementById("userBalance").textContent = userBalance;  // Display the balance
                 } else {
-                    alert("User data not found, please complete your profile.");
-                    window.location.href = "profile.html";
+                    alert("Balance not found, please complete your profile.");
+                    window.location.href = "profile.html";  // Redirect user to the profile page if balance doesn't exist
                 }
             } else {
                 alert("You are not logged in!");
-                window.location.href = "login.html";
+                window.location.href = "login.html";  // Redirect to login page if user is not logged in
             }
         });
 
@@ -169,8 +169,7 @@
             }
 
             if (enteredPin !== userPin) {
-                alert("Incorrect PIN. Please reset your PIN.");
-                window.location.href = "profile.html";  // Redirect to reset PIN page
+                alert("Incorrect PIN.");
                 return;
             }
 
@@ -180,10 +179,10 @@
             }
 
             const newBalance = userBalance - selectedPlanPrice;
-            const userRef = doc(db, "users", currentUserUID);
+            const balanceRef = doc(db, "balances", currentUserUID);
 
             // Deduct from balance and save the purchase data
-            await updateDoc(userRef, { balance: newBalance });
+            await updateDoc(balanceRef, { balance: newBalance });
 
             // Save the purchase in the purchases collection
             await setDoc(doc(db, "purchases", `${currentUserUID}-${Date.now()}`), {
