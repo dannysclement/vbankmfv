@@ -82,7 +82,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Firebase configuration
@@ -195,7 +195,12 @@
             const balanceRef = doc(db, "balances", currentUserUID);
             await updateDoc(balanceRef, { balance: newBalance });
 
-            // Call the API to purchase data
+            // Prepare API request data
+            const network = document.getElementById("network").value;  // Network selected
+            const dataType = document.getElementById("dataType").value;  // Data type selected
+            const dataPlan = dataPlanSelect.selectedOptions[0].text;  // Data plan selected (SME, Gifting, etc.)
+
+            // Make the API call to deliver the data
             const response = await fetch("https://chinedutopup.com.ng/api/data/", {
                 method: "POST",
                 headers: {
@@ -203,18 +208,18 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    network: "1",  // Network ID (MTN)
-                    phone: phoneNumber,
-                    ref: Date.now().toString(),  // Unique reference
-                    data_plan: dataPlanSelect.value,  // Data plan ID or value
-                    ported_number: false
+                    network: network,  // Pass the network selected (e.g., MTN)
+                    phone: phoneNumber,  // User's phone number
+                    ref: Date.now().toString(),  // Unique reference for transaction
+                    data_plan: dataPlan,  // Data plan selected
+                    ported_number: false  // Not for number porting
                 })
             });
 
             const data = await response.json();
 
             // Handle API response
-            if (response.ok) {
+            if (response.ok && data.status === "success") {
                 alert("Data purchase successful!");
                 window.location.href = "receipt.html";
             } else {
