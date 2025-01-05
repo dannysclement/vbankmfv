@@ -51,8 +51,9 @@
             </select>
             <label for="dataPlan">Select Data Plan</label>
             <select id="dataPlan" required>
-                <option value="1">500MB - ₦160</option>
-                <option value="2">2GB - ₦520</option>
+                <option value="1">500MB - ₦150 (SME)</option>
+                <option value="2">500MB - ₦260</option>
+                <option value="3">2GB - ₦520</option>
             </select>
             <p>Amount: ₦<span id="amountToPay">0</span></p>
             <input type="password" id="pin" placeholder="Enter 4-Digit PIN" required maxlength="4">
@@ -85,6 +86,7 @@
         let userBalance = 0;
         let userPin;
 
+        // Fetch user data and balance
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUID = user.uid;
@@ -94,7 +96,7 @@
                     userBalance = balanceDoc.data().balance;
                     document.getElementById("userBalance").textContent = userBalance;
                 } else {
-                    alert("Balance not found!");
+                    alert("Balance not found! Complete your profile.");
                     window.location.href = "profile.html";
                 }
 
@@ -109,18 +111,21 @@
             }
         });
 
+        // Update amount to pay dynamically based on plan selection
         document.getElementById("dataPlan").addEventListener("change", () => {
             const selectedPlan = document.getElementById("dataPlan").value;
-            document.getElementById("amountToPay").textContent = selectedPlan == "1" ? "260" : "520";
+            const amount = selectedPlan == "1" ? 150 : selectedPlan == "2" ? 260 : 520;
+            document.getElementById("amountToPay").textContent = amount;
         });
 
+        // Form submission and data purchase
         document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const phoneNumber = document.getElementById("phoneNumber").value;
             const network = document.getElementById("network").value;
             const dataPlan = document.getElementById("dataPlan").value;
             const pin = document.getElementById("pin").value;
-            const amount = dataPlan == "1" ? 160 : 520;
+            const amount = dataPlan == "1" ? 150 : dataPlan == "2" ? 260 : 520;
             const errorMessage = document.getElementById("errorMessage");
 
             if (pin !== userPin) {
