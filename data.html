@@ -3,59 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Check Networks</title>
+    <title>MTS VTU Data Purchase</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        button {
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        input, select, button {
+            width: 100%;
             padding: 10px;
-            background: #4CAF50;
+            margin: 10px 0;
+        }
+
+        button {
+            background-color: #28a745;
             color: white;
             border: none;
-            cursor: pointer;
         }
+
         button:hover {
-            background: #45a049;
+            background-color: #218838;
         }
-        #responseMessage {
-            margin-top: 20px;
+
+        .message {
+            text-align: center;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h2>Check Available Networks</h2>
-    <button onclick="fetchNetworks()">Get Networks</button>
-    <div id="responseMessage"></div>
+    <div class="container">
+        <h2>Buy Data Instantly</h2>
+        <input type="text" id="phoneNumber" placeholder="Enter Phone Number" maxlength="11">
+
+        <label for="network">Select Network</label>
+        <select id="network"></select>
+
+        <label for="dataType">Select Data Type</label>
+        <select id="dataType"></select>
+
+        <label for="dataPlan">Select Data Plan</label>
+        <select id="dataPlan"></select>
+
+        <button onclick="purchaseData()">Buy Now</button>
+        <div class="message" id="responseMessage"></div>
+    </div>
 
     <script>
+        const authToken = "b67c831c0565687852aa7db04aef1623341f7c56"; 
+        const baseURL = "https://mtsvtu.com/api";
+
+        // Fetch networks dynamically from API
         async function fetchNetworks() {
+            const response = await fetch(`${baseURL}/network/`, {
+                headers: { "Authorization": `Token ${authToken}` }
+            });
+            const data = await response.json();
+            const networkSelect = document.getElementById('network');
+            networkSelect.innerHTML = data.map(net => `<option value="${net.id}">${net.name}</option>`).join('');
+            fetchDataTypes();  // Fetch data types after networks load
+        }
+
+        // Fetch data types dynamically
+        async function fetchDataTypes() {
+            const response = await fetch(`${baseURL}/data-types/`, {
+                headers: { "Authorization": `Token ${authToken}` }
+            });
+            const data = await response.json();
+            const dataTypeSelect = document.getElementById('dataType');
+            dataTypeSelect.innerHTML = data.map(type => `<option value="${type.id}">${type.name}</option>`).join('');
+            fetchDataPlans();  // Fetch plans after types load
+        }
+
+        // Fetch data plans dynamically based on selected network and data type
+        async function fetchDataPlans() {
+            const network = document.getElementById('network').value;
+            const dataType = document.getElementById('dataType').value;
+            const response = await fetch(`${baseURL}/plans/?network=${network}&data_type=${dataType}`, {
+                headers: { "Authorization": `Token ${authToken}` }
+            });
+            const data = await response.json();
+            const dataPlanSelect = document.getElementById('dataPlan');
+            dataPlanSelect.innerHTML = data.map(plan => `<option value="${plan.id}">${plan.name} - ₦${plan.price}</option>`).join('');
+        }
+
+        // Call P2U API for data delivery
+        async function purchaseData() {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const network = document.getElementById('network').value;
+            const dataPlan = document.getElementById('dataPlan').value;
             const responseMessage = document.getElementById('responseMessage');
-            const authToken = "7e96c62623b88684f15a974124312fa7bf5a1550"; 
-            const url = "https://dancitysub.com/api/network/";
+
+            if (phoneNumber.length !== 11) {
+                responseMessage.textContent = "Invalid phone number!";
+                responseMessage.style.color = "red";
+                return;
+            }
 
             try {
-                const response = await fetch(url, {
-                    method: "GET",
+                const response = await fetch(`${baseURL}/data/`, {
+                    method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${authToken}`
-                    }
+                        "Authorization": `Token ${authToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        network: network,
+                        mobile_number: phoneNumber,
+                        plan: dataPlan,
+                        Ported_number: true
+                    })
                 });
 
                 const result = await response.json();
                 if (response.ok) {
-                    responseMessage.textContent = JSON.stringify(result, null, 2);
+                    responseMessage.textContent = "✅ Data purchase successful!";
+                    responseMessage.style.color = "green";
                 } else {
-                    responseMessage.textContent = "Error: " + result.message;
+                    responseMessage.textContent = `❌ Error: ${result.message}`;
                     responseMessage.style.color = "red";
                 }
             } catch (error) {
-                responseMessage.textContent = "Failed to connect to the server!";
+                responseMessage.textContent = "❌ Server Error! Please try again.";
                 responseMessage.style.color = "red";
             }
         }
+
+        // Initialize the page with networks, data types, and plans
+        window.onload = fetchNetworks;
+        document.getElementById('network').onchange = fetchDataTypes;
+        document.getElementById('dataType').onchange = fetchDataPlans;
     </script>
 </body>
 </html>
