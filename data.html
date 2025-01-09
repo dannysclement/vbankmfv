@@ -3,209 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTS VTU Data Purchase</title>
+    <title>Data Purchase</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f0f2f5;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
         }
-
         .container {
-            background: white;
+            width: 90%;
+            margin: 0 auto;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 450px;
-            width: 100%;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        h2 {
+        h1 {
             text-align: center;
             color: #333;
         }
-
-        label {
-            font-weight: bold;
-            margin-top: 10px;
-            display: block;
+        .form-group {
+            margin-bottom: 20px;
         }
-
-        input, select, button {
+        label {
+            font-size: 16px;
+            color: #333;
+        }
+        select, input[type="text"], input[type="submit"] {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
+            font-size: 16px;
             border-radius: 5px;
+            border: 1px solid #ddd;
         }
-
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
+        select, input[type="text"] {
+            margin-top: 5px;
         }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .message {
-            margin-top: 15px;
+        .response-message {
             text-align: center;
-            font-weight: bold;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>MTS VTU Data Purchase</h2>
-        <label for="phoneNumber">Phone Number</label>
-        <input type="text" id="phoneNumber" placeholder="Enter Phone Number" maxlength="11">
+        <h1>Data Purchase</h1>
+        <form id="purchase-form">
+            <div class="form-group">
+                <label for="phone-number">Phone Number</label>
+                <input type="text" id="phone-number" placeholder="Enter Phone Number" required>
+            </div>
+            <div class="form-group">
+                <label for="network">Network</label>
+                <select id="network" required>
+                    <option value="">Select Network</option>
+                    <option value="1">MTN</option>
+                    <option value="2">Glo</option>
+                    <option value="3">Etisalat</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="data-type">Data Type</label>
+                <select id="data-type" required>
+                    <option value="">Select Data Type</option>
+                    <option value="Corporate Gifting">Corporate Gifting</option>
+                    <option value="SME">SME</option>
+                    <option value="Data Coupons">Data Coupons</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="plan">Choose Plan</label>
+                <select id="plan" required>
+                    <option value="">Select Plan</option>
+                    <option value="201">500MB - ₦200</option>
+                    <!-- Add more plans here if needed -->
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Buy Now">
+            </div>
+        </form>
 
-        <label for="network">Network</label>
-        <select id="network" onchange="updateDataTypes()">
-            <option value="1">MTN</option>
-            <option value="2">GLO</option>
-            <option value="3">Airtel</option>
-            <option value="4">9mobile</option>
-        </select>
+        <div id="response-message" class="response-message"></div>
+    </div>
 
-        <label for="dataType">Data Type</label>
-        <select id="dataType" onchange="updatePlans()">
-            <option value="corporate">Corporate Gifting</option>
-            <option value="sme">SME</option>
-            <option value="coupon">Data Coupon</option>
-        </select>
-
-        <label for="dataPlan">Choose Plan</label>
-        <select id="dataPlan">
-            <!-- Plans will be populated dynamically -->
-        </select>
-
-        <button onclick="purchaseData()">Buy Now</button>
-        <div class="message" id="responseMessage"></div>
+    <div class="footer">
+        <p>Powered by MTS VTU</p>
     </div>
 
     <script>
-        const authToken = "b67c831c0565687852aa7db04aef1623341f7c56"; 
-        const url = "https://mtsvtu.com/api/data/";
+        document.getElementById("purchase-form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            
+            const phoneNumber = document.getElementById("phone-number").value;
+            const network = document.getElementById("network").value;
+            const dataType = document.getElementById("data-type").value;
+            const plan = document.getElementById("plan").value;
+            
+            const responseMessage = document.getElementById("response-message");
 
-        // Predefined plans based on data type
-        const plans = {
-            corporate: [
-                { id: 201, name: "500MB", price: 200 },
-                { id: 202, name: "1GB", price: 500 }
-            ],
-            sme: [
-                { id: 301, name: "1GB", price: 400 },
-                { id: 302, name: "2GB", price: 800 }
-            ],
-            coupon: [
-                { id: 401, name: "2GB", price: 700 },
-                { id: 402, name: "5GB", price: 1500 }
-            ]
-        };
-
-        // Function to update plans based on selected data type
-        function updatePlans() {
-            const dataType = document.getElementById('dataType').value;
-            const dataPlanSelect = document.getElementById('dataPlan');
-            dataPlanSelect.innerHTML = "";  // Clear existing options
-
-            plans[dataType].forEach(plan => {
-                const option = document.createElement('option');
-                option.value = plan.id;
-                option.textContent = `${plan.name} - ₦${plan.price}`;
-                dataPlanSelect.appendChild(option);
-            });
-        }
-
-        // Initialize plans on load
-        updatePlans();
-
-        // API call for data purchase and delivery
-        async function purchaseData() {
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const network = document.getElementById('network').value;
-            const dataPlan = document.getElementById('dataPlan').value;
-            const responseMessage = document.getElementById('responseMessage');
-
-            // Validate phone number
-            if (phoneNumber.length !== 11 || phoneNumber[0] !== '0') {
-                responseMessage.textContent = "❌ Invalid phone number!";
-                responseMessage.style.color = "red";
+            if (!phoneNumber || !network || !dataType || !plan) {
+                responseMessage.textContent = "❌ Please fill in all fields!";
+                responseMessage.classList.add("error");
                 return;
             }
 
+            responseMessage.textContent = "Processing... Please wait.";
+            responseMessage.classList.remove("error");
+            responseMessage.classList.add("success");
+
             try {
-                // Data purchase API call
-                const response = await fetch(url, {
-                    method: "POST",
+                const response = await fetch('https://mtsvtu.com/api/data/', {
+                    method: 'POST',
                     headers: {
-                        "Authorization": `Token ${authToken}`,
-                        "Content-Type": "application/json"
+                        'Authorization': 'Token b67c831c0565687852aa7db04aef1623341f7c56',
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         network: network,
                         mobile_number: phoneNumber,
-                        plan: dataPlan,
+                        plan: plan,
                         Ported_number: true
                     })
                 });
 
-                const result = await response.json();
                 if (response.ok) {
+                    const data = await response.json();
                     responseMessage.textContent = "✅ Data purchase successful!";
-                    responseMessage.style.color = "green";
-
-                    // Make an API call to P2U for data delivery
-                    deliverData(phoneNumber, dataPlan);
+                    responseMessage.classList.remove("error");
+                    responseMessage.classList.add("success");
                 } else {
-                    responseMessage.textContent = `❌ Error: ${result.message}`;
-                    responseMessage.style.color = "red";
+                    const error = await response.json();
+                    responseMessage.textContent = `❌ ${error.detail || 'Server error. Please try again later.'}`;
+                    responseMessage.classList.remove("success");
+                    responseMessage.classList.add("error");
                 }
             } catch (error) {
                 responseMessage.textContent = "❌ Server connection failed!";
-                responseMessage.style.color = "red";
+                responseMessage.classList.remove("success");
+                responseMessage.classList.add("error");
             }
-        }
-
-        // Function to make the API call to P2U for data delivery
-        async function deliverData(phoneNumber, dataPlan) {
-            const responseMessage = document.getElementById('responseMessage');
-            const p2uUrl = "https://your-p2u-api-endpoint.com";  // Replace with actual P2U API URL
-
-            try {
-                const response = await fetch(p2uUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        mobile_number: phoneNumber,
-                        plan_id: dataPlan
-                    })
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    responseMessage.textContent += " ✅ Data delivery initiated!";
-                    responseMessage.style.color = "green";
-                } else {
-                    responseMessage.textContent += ` ❌ Delivery failed: ${result.message}`;
-                    responseMessage.style.color = "red";
-                }
-            } catch (error) {
-                responseMessage.textContent += " ❌ Delivery API call failed!";
-                responseMessage.style.color = "red";
-            }
-        }
+        });
     </script>
 </body>
 </html>
