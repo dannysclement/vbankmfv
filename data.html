@@ -27,43 +27,66 @@
 
         h2 {
             text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
         }
 
         input, select, button {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
 
         button {
-            background-color: #28a745;
+            background-color: #007BFF;
             color: white;
             border: none;
+            cursor: pointer;
         }
 
         button:hover {
-            background-color: #218838;
+            background-color: #0056b3;
         }
 
         .message {
+            margin-top: 15px;
             text-align: center;
-            margin-top: 10px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Buy Data Instantly</h2>
+        <h2>MTS VTU Data Purchase</h2>
+        <label for="phoneNumber">Phone Number</label>
         <input type="text" id="phoneNumber" placeholder="Enter Phone Number" maxlength="11">
 
-        <label for="network">Select Network</label>
-        <select id="network"></select>
+        <label for="network">Network</label>
+        <select id="network" onchange="updateDataTypes()">
+            <option value="1">MTN</option>
+            <option value="2">GLO</option>
+            <option value="3">Airtel</option>
+            <option value="4">9mobile</option>
+        </select>
 
-        <label for="dataType">Select Data Type</label>
-        <select id="dataType"></select>
+        <label for="dataType">Data Type</label>
+        <select id="dataType" onchange="updatePlans()">
+            <option value="corporate">Corporate Gifting</option>
+            <option value="sme">SME</option>
+            <option value="coupon">Data Coupon</option>
+        </select>
 
-        <label for="dataPlan">Select Data Plan</label>
-        <select id="dataPlan"></select>
+        <label for="dataPlan">Choose Plan</label>
+        <select id="dataPlan">
+            <!-- Plans will be populated dynamically -->
+        </select>
 
         <button onclick="purchaseData()">Buy Now</button>
         <div class="message" id="responseMessage"></div>
@@ -71,57 +94,58 @@
 
     <script>
         const authToken = "b67c831c0565687852aa7db04aef1623341f7c56"; 
-        const baseURL = "https://mtsvtu.com/api";
+        const url = "https://mtsvtu.com/api/data/";
 
-        // Fetch networks dynamically from API
-        async function fetchNetworks() {
-            const response = await fetch(`${baseURL}/network/`, {
-                headers: { "Authorization": `Token ${authToken}` }
-            });
-            const data = await response.json();
-            const networkSelect = document.getElementById('network');
-            networkSelect.innerHTML = data.map(net => `<option value="${net.id}">${net.name}</option>`).join('');
-            fetchDataTypes();  // Fetch data types after networks load
-        }
+        // Predefined plans based on data type
+        const plans = {
+            corporate: [
+                { id: 201, name: "500MB", price: 200 },
+                { id: 202, name: "1GB", price: 500 }
+            ],
+            sme: [
+                { id: 301, name: "1GB", price: 400 },
+                { id: 302, name: "2GB", price: 800 }
+            ],
+            coupon: [
+                { id: 401, name: "2GB", price: 700 },
+                { id: 402, name: "5GB", price: 1500 }
+            ]
+        };
 
-        // Fetch data types dynamically
-        async function fetchDataTypes() {
-            const response = await fetch(`${baseURL}/data-types/`, {
-                headers: { "Authorization": `Token ${authToken}` }
-            });
-            const data = await response.json();
-            const dataTypeSelect = document.getElementById('dataType');
-            dataTypeSelect.innerHTML = data.map(type => `<option value="${type.id}">${type.name}</option>`).join('');
-            fetchDataPlans();  // Fetch plans after types load
-        }
-
-        // Fetch data plans dynamically based on selected network and data type
-        async function fetchDataPlans() {
-            const network = document.getElementById('network').value;
+        // Function to update plans based on selected data type
+        function updatePlans() {
             const dataType = document.getElementById('dataType').value;
-            const response = await fetch(`${baseURL}/plans/?network=${network}&data_type=${dataType}`, {
-                headers: { "Authorization": `Token ${authToken}` }
-            });
-            const data = await response.json();
             const dataPlanSelect = document.getElementById('dataPlan');
-            dataPlanSelect.innerHTML = data.map(plan => `<option value="${plan.id}">${plan.name} - ₦${plan.price}</option>`).join('');
+            dataPlanSelect.innerHTML = "";  // Clear existing options
+
+            plans[dataType].forEach(plan => {
+                const option = document.createElement('option');
+                option.value = plan.id;
+                option.textContent = `${plan.name} - ₦${plan.price}`;
+                dataPlanSelect.appendChild(option);
+            });
         }
 
-        // Call P2U API for data delivery
+        // Initialize plans on load
+        updatePlans();
+
+        // API call for data purchase and delivery
         async function purchaseData() {
             const phoneNumber = document.getElementById('phoneNumber').value;
             const network = document.getElementById('network').value;
             const dataPlan = document.getElementById('dataPlan').value;
             const responseMessage = document.getElementById('responseMessage');
 
-            if (phoneNumber.length !== 11) {
-                responseMessage.textContent = "Invalid phone number!";
+            // Validate phone number
+            if (phoneNumber.length !== 11 || phoneNumber[0] !== '0') {
+                responseMessage.textContent = "❌ Invalid phone number!";
                 responseMessage.style.color = "red";
                 return;
             }
 
             try {
-                const response = await fetch(`${baseURL}/data/`, {
+                // Data purchase API call
+                const response = await fetch(url, {
                     method: "POST",
                     headers: {
                         "Authorization": `Token ${authToken}`,
@@ -139,20 +163,49 @@
                 if (response.ok) {
                     responseMessage.textContent = "✅ Data purchase successful!";
                     responseMessage.style.color = "green";
+
+                    // Make an API call to P2U for data delivery
+                    deliverData(phoneNumber, dataPlan);
                 } else {
                     responseMessage.textContent = `❌ Error: ${result.message}`;
                     responseMessage.style.color = "red";
                 }
             } catch (error) {
-                responseMessage.textContent = "❌ Server Error! Please try again.";
+                responseMessage.textContent = "❌ Server connection failed!";
                 responseMessage.style.color = "red";
             }
         }
 
-        // Initialize the page with networks, data types, and plans
-        window.onload = fetchNetworks;
-        document.getElementById('network').onchange = fetchDataTypes;
-        document.getElementById('dataType').onchange = fetchDataPlans;
+        // Function to make the API call to P2U for data delivery
+        async function deliverData(phoneNumber, dataPlan) {
+            const responseMessage = document.getElementById('responseMessage');
+            const p2uUrl = "https://your-p2u-api-endpoint.com";  // Replace with actual P2U API URL
+
+            try {
+                const response = await fetch(p2uUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        mobile_number: phoneNumber,
+                        plan_id: dataPlan
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    responseMessage.textContent += " ✅ Data delivery initiated!";
+                    responseMessage.style.color = "green";
+                } else {
+                    responseMessage.textContent += ` ❌ Delivery failed: ${result.message}`;
+                    responseMessage.style.color = "red";
+                }
+            } catch (error) {
+                responseMessage.textContent += " ❌ Delivery API call failed!";
+                responseMessage.style.color = "red";
+            }
+        }
     </script>
 </body>
 </html>
