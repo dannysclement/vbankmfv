@@ -5,70 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTN Data Purchase - VBANKMFV</title>
     <style>
+        /* General Styling */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #ffcc00, #ff9900);
-            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
             padding: 20px;
         }
         .container {
-            background: #fff;
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
             max-width: 450px;
             width: 100%;
             text-align: center;
         }
 
+        /* Moving Message Animation */
         .welcome-message {
             font-size: 18px;
             font-weight: bold;
             color: #ff5500;
-            margin-bottom: 15px;
-            white-space: nowrap;
+            margin-bottom: 10px;
             overflow: hidden;
+            white-space: nowrap;
+            animation: slide 8s linear infinite;
+        }
+        @keyframes slide {
+            from { transform: translateX(100%); }
+            to { transform: translateX(-100%); }
         }
 
-        .balance {
-            font-size: 20px;
-            font-weight: bold;
-            color: #28a745;
-            margin-bottom: 20px;
-            border: 2px solid #28a745;
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        label { font-weight: bold; display: block; text-align: left; margin-top: 10px; }
-        select, input { width: 100%; padding: 12px; border-radius: 10px; margin-top: 5px; }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            margin-top: 20px;
-            cursor: pointer;
-        }
+        /* Form Styling */
+        label { font-weight: bold; text-align: left; display: block; margin-top: 10px; }
+        select, input, button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 10px; border: 1px solid #ccc; }
+        button { background: #28a745; color: white; border: none; cursor: pointer; }
         button:hover { background: #218838; }
-        .amount { font-size: 24px; font-weight: bold; color: #007bff; margin-top: 15px; }
+        .amount { font-size: 20px; color: #007bff; margin-top: 15px; }
+        .balance { font-size: 20px; font-weight: bold; color: #28a745; border: 2px solid #28a745; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Welcome Message -->
+        <!-- Moving Message -->
         <div class="welcome-message">🎉 Welcome to VBANKMFV! Enjoy Seamless Data Purchase! 🎉</div>
-
-        <!-- Balance Display -->
+        
+        <!-- User Balance -->
         <div class="balance">💰 Your Balance: ₦ <span id="userBalance">Loading...</span></div>
-
+        
         <h2>MTN Data Purchase</h2>
+
         <!-- Data Purchase Form -->
         <form id="dataForm">
             <label for="dataType">Select Data Type</label>
@@ -93,13 +84,14 @@
         </form>
     </div>
 
-    <!-- Firebase and JavaScript -->
+    <!-- Firebase & JavaScript -->
     <script type="module">
-        // Firebase SDK Imports
+        // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
             authDomain: "vbankmfv.firebaseapp.com",
@@ -109,13 +101,14 @@
             appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth();
 
         let currentUserUID = null;
 
-        // Real-time Balance Fetching with Firebase Authentication
+        // Real-time Balance Fetching
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUserUID = user.uid;
@@ -124,37 +117,28 @@
                     if (doc.exists()) {
                         document.getElementById("userBalance").textContent = doc.data().balance;
                     } else {
-                        alert("User balance not found!");
+                        alert("Balance not found in Firestore!");
                     }
                 });
             } else {
-                alert("Please log in first!");
+                alert("Please log in to view balance.");
             }
         });
 
-        // Data Plans List
+        // Data Plans
         const plans = {
-            sme: {
-                "500MB - ₦200 (30 days)": 200,
-                "1GB - ₦280 (30 days)": 280
-            },
-            gifting: {
-                "500MB - ₦250 (30 days)": 250,
-                "1GB - ₦300 (30 days)": 300
-            },
-            corporate: {
-                "500MB - ₦220 (30 days)": 220,
-                "1GB - ₦310 (30 days)": 310
-            }
+            sme: { "500MB": 200, "1GB": 280 },
+            gifting: { "500MB": 250, "1GB": 300 },
+            corporate: { "500MB": 220, "1GB": 310 }
         };
 
-        // Update Plans Dropdown
+        // Update Plans Based on Data Type
         window.updatePlans = () => {
             const dataType = document.getElementById("dataType").value;
             const dataPlanSelect = document.getElementById("dataPlan");
             dataPlanSelect.innerHTML = "<option value=''>-- Select a Data Plan --</option>";
-            for (let plan in plans[dataType]) {
-                dataPlanSelect.innerHTML += `<option value="${plan}">${plan}</option>`;
+            for (const plan in plans[dataType]) {
+                dataPlanSelect.innerHTML += `<option value="${plan}">${plan} - ₦${plans[dataType][plan]}</option>`;
             }
             updateAmount();
         };
@@ -163,8 +147,7 @@
         window.updateAmount = () => {
             const dataType = document.getElementById("dataType").value;
             const dataPlan = document.getElementById("dataPlan").value;
-            const amountDisplay = document.getElementById("amountDisplay");
-            amountDisplay.textContent = plans[dataType][dataPlan] || 0;
+            document.getElementById("amountDisplay").textContent = plans[dataType][dataPlan] || 0;
         };
 
         // API Call to ChineduTopup
@@ -193,8 +176,9 @@
                     ported_number: false
                 })
             });
+
             const result = await response.json();
-            alert(result.message);
+            alert(result.message || "Data purchase successful!");
         };
     </script>
 </body>
