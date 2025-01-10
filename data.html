@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTN Data Purchase - VBANKMFV</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #ffcc00, #ff9900);
@@ -34,19 +30,8 @@
             font-weight: bold;
             color: #ff5500;
             margin-bottom: 15px;
-            overflow: hidden;
             white-space: nowrap;
-        }
-
-        .welcome-message span {
-            display: inline-block;
-            position: relative;
-            animation: moveText 10s linear infinite;
-        }
-
-        @keyframes moveText {
-            from { transform: translateX(100%); }
-            to { transform: translateX(-100%); }
+            overflow: hidden;
         }
 
         .balance {
@@ -59,88 +44,61 @@
             border-radius: 10px;
         }
 
-        label {
-            font-weight: 600;
-            margin: 10px 0;
-            display: block;
-            text-align: left;
-        }
-
-        select, input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
+        label { font-weight: bold; display: block; text-align: left; margin-top: 10px; }
+        select, input { width: 100%; padding: 12px; border-radius: 10px; margin-top: 5px; }
         button {
             width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 12px;
+            padding: 12px;
             background: #28a745;
             color: white;
-            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            margin-top: 20px;
             cursor: pointer;
         }
-
-        button:hover {
-            background: #218838;
-        }
-
-        .amount {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 20px;
-        }
+        button:hover { background: #218838; }
+        .amount { font-size: 24px; font-weight: bold; color: #007bff; margin-top: 15px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Moving Welcome Message -->
-        <div class="welcome-message">
-            <span>🎉 Welcome to VBANKMFV! Enjoy Seamless Data Purchase! 🎉</span>
-        </div>
+        <!-- Welcome Message -->
+        <div class="welcome-message">🎉 Welcome to VBANKMFV! Enjoy Seamless Data Purchase! 🎉</div>
 
         <!-- Balance Display -->
         <div class="balance">💰 Your Balance: ₦ <span id="userBalance">Loading...</span></div>
 
         <h2>MTN Data Purchase</h2>
+        <!-- Data Purchase Form -->
         <form id="dataForm">
-            <!-- Data Type -->
             <label for="dataType">Select Data Type</label>
-            <select id="dataType" onchange="updatePlans()">
+            <select id="dataType" onchange="updatePlans()" required>
                 <option value="">-- Select Data Type --</option>
                 <option value="sme">SME</option>
                 <option value="gifting">Gifting</option>
                 <option value="corporate">Corporate</option>
             </select>
 
-            <!-- Data Plan -->
             <label for="dataPlan">Select Data Plan</label>
-            <select id="dataPlan" onchange="updateAmount()">
-                <option value="">-- Select Data Plan --</option>
+            <select id="dataPlan" onchange="updateAmount()" required>
+                <option value="">-- Select a Data Plan --</option>
             </select>
 
-            <!-- Phone Number -->
-            <label for="phoneNumber">Enter Phone Number</label>
-            <input type="text" id="phoneNumber" placeholder="Enter 11-digit number" maxlength="11" required>
+            <label for="phoneNumber">Phone Number</label>
+            <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter 11-digit phone number" required>
 
-            <!-- Amount to Pay -->
-            <div class="amount" id="amountDisplay">₦ 0</div>
+            <div class="amount">Amount to Pay: ₦<span id="amountDisplay">0</span></div>
 
-            <!-- Pay Now Button -->
             <button type="button" onclick="submitPurchase()">Pay Now</button>
         </form>
     </div>
 
-    <!-- Firebase and JS Integration -->
+    <!-- Firebase and JavaScript -->
     <script type="module">
+        // Firebase SDK Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
@@ -153,52 +111,73 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth();
 
-        // Fetch balance from Firestore
-        async function fetchBalance() {
-            const userId = "user123"; // Replace with dynamic user ID fetching logic
-            const userDoc = doc(db, "users", userId);
-            const docSnap = await getDoc(userDoc);
-            if (docSnap.exists()) {
-                document.getElementById("userBalance").textContent = docSnap.data().balance;
+        let currentUserUID = null;
+
+        // Real-time Balance Fetching with Firebase Authentication
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserUID = user.uid;
+                const userRef = doc(db, "users", currentUserUID);
+                onSnapshot(userRef, (doc) => {
+                    if (doc.exists()) {
+                        document.getElementById("userBalance").textContent = doc.data().balance;
+                    } else {
+                        alert("User balance not found!");
+                    }
+                });
             } else {
-                alert("User not found!");
+                alert("Please log in first!");
             }
-        }
+        });
 
-        window.onload = fetchBalance;
-
+        // Data Plans List
         const plans = {
-            sme: { "500MB - ₦200": 200, "1GB - ₦280": 280 },
-            gifting: { "500MB - ₦250": 250, "1GB - ₦300": 300 },
-            corporate: { "500MB - ₦220": 220, "1GB - ₦310": 310 }
+            sme: {
+                "500MB - ₦200 (30 days)": 200,
+                "1GB - ₦280 (30 days)": 280
+            },
+            gifting: {
+                "500MB - ₦250 (30 days)": 250,
+                "1GB - ₦300 (30 days)": 300
+            },
+            corporate: {
+                "500MB - ₦220 (30 days)": 220,
+                "1GB - ₦310 (30 days)": 310
+            }
         };
 
-        function updatePlans() {
+        // Update Plans Dropdown
+        window.updatePlans = () => {
             const dataType = document.getElementById("dataType").value;
             const dataPlanSelect = document.getElementById("dataPlan");
-            dataPlanSelect.innerHTML = "<option value=''>-- Select Data Plan --</option>";
-            Object.keys(plans[dataType]).forEach(plan => {
-                const option = document.createElement("option");
-                option.textContent = plan;
-                option.value = plan;
-                dataPlanSelect.appendChild(option);
-            });
+            dataPlanSelect.innerHTML = "<option value=''>-- Select a Data Plan --</option>";
+            for (let plan in plans[dataType]) {
+                dataPlanSelect.innerHTML += `<option value="${plan}">${plan}</option>`;
+            }
             updateAmount();
-        }
+        };
 
-        function updateAmount() {
+        // Update Amount Display
+        window.updateAmount = () => {
             const dataType = document.getElementById("dataType").value;
             const dataPlan = document.getElementById("dataPlan").value;
             const amountDisplay = document.getElementById("amountDisplay");
-            amountDisplay.textContent = "₦ " + (plans[dataType][dataPlan] || 0);
-        }
+            amountDisplay.textContent = plans[dataType][dataPlan] || 0;
+        };
 
-        async function submitPurchase() {
+        // API Call to ChineduTopup
+        window.submitPurchase = async () => {
             const phoneNumber = document.getElementById("phoneNumber").value;
             const dataType = document.getElementById("dataType").value;
             const dataPlan = document.getElementById("dataPlan").value;
             const amount = plans[dataType][dataPlan];
+
+            if (!phoneNumber || !dataType || !dataPlan) {
+                alert("Please fill all fields correctly.");
+                return;
+            }
 
             const response = await fetch("https://chinedutopup.com.ng/api/data/", {
                 method: "POST",
@@ -209,14 +188,14 @@
                 body: JSON.stringify({
                     network: "1",
                     phone: phoneNumber,
-                    ref: "1234567890",
+                    ref: `REF${Date.now()}`,
                     data_plan: "1",
                     ported_number: false
                 })
             });
             const result = await response.json();
             alert(result.message);
-        }
+        };
     </script>
 </body>
 </html>
