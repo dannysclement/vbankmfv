@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTN Data Purchase</title>
+    <title>MTN Data Purchase - VBANKMFV</title>
     <style>
         /* General Styling */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -31,9 +31,10 @@
             font-size: 18px;
             font-weight: bold;
             color: #ff5500;
-            overflow: hidden;
+            margin-bottom: 10px;
             white-space: nowrap;
-            animation: slide 8s linear infinite;
+            overflow: hidden;
+            animation: slide 10s linear infinite;
         }
         @keyframes slide {
             from { transform: translateX(100%); }
@@ -41,7 +42,7 @@
         }
 
         /* Form Styling */
-        label { font-weight: bold; text-align: left; display: block; margin-top: 10px; }
+        label { font-weight: bold; margin-top: 10px; display: block; }
         select, input, button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 10px; border: 1px solid #ccc; }
         button { background: #28a745; color: white; border: none; cursor: pointer; }
         button:hover { background: #218838; }
@@ -52,7 +53,7 @@
 <body>
     <div class="container">
         <!-- Moving Message -->
-        <div class="welcome-message">🎉 Welcome to VBANKMFV! Enjoy Seamless Data Purchase! 🎉</div>
+        <div class="welcome-message">🎉 Welcome to VBANKMFV! Enjoy Seamless Data Purchase 🎉</div>
         
         <!-- User Balance -->
         <div class="balance">💰 Your Balance: ₦ <span id="userBalance">Loading...</span></div>
@@ -103,32 +104,32 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth();
+        const auth = getAuth(app);
 
         let currentUserUID = null;
 
-        // Real-time Balance Fetching
+        // Fetch User Balance in Real-time
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUserUID = user.uid;
-                const userRef = doc(db, "users", currentUserUID);
+                const userRef = doc(db, "balances", currentUserUID);
                 onSnapshot(userRef, (doc) => {
                     if (doc.exists()) {
                         document.getElementById("userBalance").textContent = doc.data().balance;
                     } else {
-                        alert("Balance not found in Firestore!");
+                        alert("Balance not found for this user.");
                     }
                 });
             } else {
-                alert("Please log in to view balance.");
+                alert("User not logged in. Please log in first.");
             }
         });
 
         // Data Plans
         const plans = {
-            sme: { "500MB": 200, "1GB": 280 },
-            gifting: { "500MB": 250, "1GB": 300 },
-            corporate: { "500MB": 220, "1GB": 310 }
+            sme: { "500MB - SME (₦200)": 200, "1GB - SME (₦280)": 280 },
+            gifting: { "500MB - Gifting (₦250)": 250, "1GB - Gifting (₦300)": 300 },
+            corporate: { "500MB - Corporate (₦220)": 220, "1GB - Corporate (₦310)": 310 }
         };
 
         // Update Plans Based on Data Type
@@ -137,7 +138,7 @@
             const dataPlanSelect = document.getElementById("dataPlan");
             dataPlanSelect.innerHTML = "<option value=''>-- Select a Data Plan --</option>";
             for (const plan in plans[dataType]) {
-                dataPlanSelect.innerHTML += `<option value="${plan}">${plan} - ₦${plans[dataType][plan]}</option>`;
+                dataPlanSelect.innerHTML += `<option value="${plan}">${plan}</option>`;
             }
             updateAmount();
         };
@@ -149,7 +150,7 @@
             document.getElementById("amountDisplay").textContent = plans[dataType][dataPlan] || 0;
         };
 
-        // API Call to ChineduTopup
+        // API Call for Data Purchase
         window.submitPurchase = async () => {
             const phoneNumber = document.getElementById("phoneNumber").value;
             const dataType = document.getElementById("dataType").value;
