@@ -28,13 +28,6 @@
             font-weight: bold;
             color: #ff5500;
             margin-bottom: 10px;
-            white-space: nowrap;
-            overflow: hidden;
-            animation: slide 10s linear infinite;
-        }
-        @keyframes slide {
-            from { transform: translateX(100%); }
-            to { transform: translateX(-100%); }
         }
         label { font-weight: bold; margin-top: 10px; display: block; }
         select, input, button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 10px; border: 1px solid #ccc; }
@@ -142,18 +135,15 @@
                 return;
             }
 
+            if (currentUserBalance < amount) {
+                alert("Insufficient balance. Please fund your wallet.");
+                return;
+            }
+
             const response = await fetch('http://localhost:3000/api/purchase', {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    userUID: currentUserUID,
-                    phoneNumber,
-                    dataType,
-                    dataPlan,
-                    amount
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phoneNumber, dataType, dataPlan, amount })
             });
 
             const result = await response.json();
