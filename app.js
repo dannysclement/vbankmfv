@@ -30,13 +30,9 @@ app.post('/api/purchase', async (req, res) => {
         });
 
         const result = await response.json();
-        if (response.ok) {
-            res.json({ message: "Data purchase successful!", data: result });
-        } else {
-            res.status(400).json({ message: result.message || "Failed to complete purchase." });
-        }
+        res.json({ message: "Data successfully purchased!", data: result });
     } catch (error) {
-        res.status(500).json({ message: "Server error. Please try again.", error });
+        res.status(500).json({ message: "Transaction Failed!", error });
     }
 });
 
