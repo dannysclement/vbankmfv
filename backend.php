@@ -2,33 +2,35 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-// API Endpoint and Authorization Token
+// API Setup (No delay, real-time)
 $API_URL = "https://swiftdataapi.com.ng/api/data/";
 $AUTH_TOKEN = "a1b26fe689c67dd7388307e6ae1141be0dfacc9c";
 
-// Fetching data from frontend request
-$data = json_decode(file_get_contents("php://input"));
-
-if (!isset($data->phoneNumber) || !isset($data->dataType) || !isset($data->dataPlan)) {
-    echo json_encode(["message" => "Invalid request. Please fill all fields."]);
-    exit();
+// Fast Input Handling
+$data = json_decode(file_get_contents("php://input"), true);
+if (!$data || !isset($data['phoneNumber'])) {
+    echo json_encode(["message" => "Invalid data provided!"]);
+    exit;
 }
 
-// Assigning variables
-$phoneNumber = $data->phoneNumber;
-$dataType = $data->dataType;
-$dataPlan = $data->dataPlan;
-$amount = $data->amount;
+$phoneNumber = trim($data['phoneNumber']);
+$dataType = trim($data['dataType']);
+$dataPlan = trim($data['dataPlan']);
+$amount = intval($data['amount']);
 
-// Preparing API payload for data purchase
+// Fast Data Validation
+if (strlen($phoneNumber) !== 11) {
+    echo json_encode(["message" => "Invalid phone number!"]);
+    exit;
+}
+
+// Send Request to SwiftData API (Fast)
 $payload = json_encode([
     "network" => "MTN",
     "mobile_number" => $phoneNumber,
-    "plan" => $dataPlan,
-    "Ported_number" => true
+    "plan" => $dataPlan
 ]);
 
-// Calling the VTU API with cURL
 $ch = curl_init($API_URL);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
@@ -39,12 +41,12 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
 ]);
 
 $response = curl_exec($ch);
-$responseData = json_decode($response, true);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
-// Check if the transaction was successful
-if (isset($responseData['status']) && $responseData['status'] === 'success') {
-    echo json_encode(["message" => "Transaction successful! Data has been sent to $phoneNumber"]);
+// Fast Response Handling
+if ($httpCode === 200) {
+    echo json_encode(["message" => "Data purchase successful!"]);
 } else {
     echo json_encode(["message" => "Transaction failed. Please try again."]);
 }
