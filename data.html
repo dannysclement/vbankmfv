@@ -3,143 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTN Data Purchase - VBANKMFV</title>
+    <title>Fast MTN Data Purchase</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: #f3f3f3;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        h1 { text-align: center; color: #ff6600; }
-        label { font-weight: bold; }
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        button {
-            background: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover { background: #218838; }
-        .balance {
-            margin-bottom: 20px;
-            font-size: 20px;
-            color: #333;
-        }
+        body { font-family: Arial, sans-serif; background: #f9f9f9; }
+        .container { padding: 20px; background: white; border-radius: 10px; max-width: 400px; margin: auto; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        button { background: #28a745; color: white; padding: 10px; border: none; cursor: pointer; width: 100%; }
+        button:disabled { background: grey; cursor: not-allowed; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>MTN Data Purchase</h1>
-        <div class="balance">💰 Balance: ₦<span id="userBalance">Loading...</span></div>
+        <h2>MTN Data Purchase</h2>
+        <label>Phone Number:</label>
+        <input type="text" id="phoneNumber" maxlength="11" placeholder="Enter phone number" required><br>
         
-        <form id="dataForm">
-            <label for="phoneNumber">Phone Number</label>
-            <input type="text" id="phoneNumber" placeholder="Enter Phone Number" required maxlength="11">
+        <label>Data Type:</label>
+        <select id="dataType">
+            <option value="sme">SME</option>
+            <option value="gifting">Gifting</option>
+        </select><br>
 
-            <label for="dataType">Data Type</label>
-            <select id="dataType" required>
-                <option value="sme">SME</option>
-                <option value="gifting">Gifting</option>
-            </select>
+        <label>Data Plan:</label>
+        <select id="dataPlan">
+            <option value="500MB">500MB</option>
+            <option value="1GB">1GB</option>
+        </select><br>
 
-            <label for="dataPlan">Data Plan</label>
-            <select id="dataPlan" required>
-                <option value="500MB">500MB</option>
-                <option value="1GB">1GB</option>
-            </select>
-
-            <label>Amount: ₦<span id="amountDisplay">0</span></label>
-            <button type="button" onclick="submitPurchase()">Purchase Data</button>
-        </form>
+        <p>Amount: ₦<span id="amountDisplay">0</span></p>
         
-        <div id="responseMessage"></div>
+        <button id="purchaseButton">Pay Now</button>
+        <p id="responseMessage"></p>
     </div>
 
-    <!-- Firebase & JavaScript -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    <!-- Fast JavaScript for Instant Transactions -->
+    <script>
+        const button = document.getElementById('purchaseButton');
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA1dzpeYvPixn7y3yPx-h6M031QLXJFXBc",
-            authDomain: "vbankmfv.firebaseapp.com",
-            projectId: "vbankmfv",
-            storageBucket: "vbankmfv.firebasestorage.app",
-            messagingSenderId: "920021461554",
-            appId: "1:920021461554:web:93e1f0ed565c78a04c2a2b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        let currentUserBalance = 0;
-
-        const plans = {
-            "sme": { "500MB": 200, "1GB": 280 },
-            "gifting": { "500MB": 250, "1GB": 300 }
-        };
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const uid = user.uid;
-                const userRef = doc(db, "balances", uid);
-                const docSnap = await getDoc(userRef);
-                if (docSnap.exists()) {
-                    currentUserBalance = docSnap.data().balance;
-                    document.getElementById("userBalance").textContent = currentUserBalance;
-                } else {
-                    alert("No balance found for this user.");
-                }
-            } else {
-                alert("User not signed in.");
-            }
-        });
-
-        window.submitPurchase = async () => {
+        button.addEventListener('click', async function () {
+            button.disabled = true;
+            button.textContent = "Processing...";
+            
             const phoneNumber = document.getElementById("phoneNumber").value;
             const dataType = document.getElementById("dataType").value;
             const dataPlan = document.getElementById("dataPlan").value;
-            const amount = plans[dataType][dataPlan];
-
-            if (amount > currentUserBalance) {
-                alert("Insufficient balance. Please recharge.");
+            const amount = dataType === 'sme' ? (dataPlan === '500MB' ? 200 : 280) : (dataPlan === '500MB' ? 250 : 300);
+            
+            if (!phoneNumber || phoneNumber.length !== 11) {
+                alert("Enter a valid phone number!");
+                button.disabled = false;
+                button.textContent = "Pay Now";
                 return;
             }
 
-            const response = await fetch("backend.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    phoneNumber: phoneNumber,
-                    dataType: dataType,
-                    dataPlan: dataPlan,
-                    amount: amount
-                })
-            });
-
-            const result = await response.json();
-            document.getElementById("responseMessage").innerText = result.message;
-        };
+            try {
+                const response = await fetch('backend.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber, dataType, dataPlan, amount })
+                });
+                
+                const result = await response.json();
+                document.getElementById("responseMessage").textContent = result.message;
+            } catch (error) {
+                document.getElementById("responseMessage").textContent = "An error occurred. Try again!";
+            } finally {
+                button.disabled = false;
+                button.textContent = "Pay Now";
+            }
+        });
     </script>
 </body>
 </html>
