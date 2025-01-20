@@ -176,19 +176,23 @@
         }
     });
 
-    // Check if user is logged in
+    // Check if user is logged in and fetch balance
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             window.location.href = "login.html"; // Redirect if not logged in
         } else {
-            // Fetch balance from Firestore
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                const balance = userData.balance;
-                userBalanceDiv.textContent = `Your Balance: ₦${balance}`;
-            } else {
-                userBalanceDiv.textContent = 'Unable to fetch user data.';
+            try {
+                // Fetch user-specific balance from Firestore balance collection
+                const userBalanceDoc = await getDoc(doc(db, "balances", user.uid));
+                if (userBalanceDoc.exists()) {
+                    const userBalanceData = userBalanceDoc.data();
+                    const balance = userBalanceData.balance;
+                    userBalanceDiv.textContent = `Your Balance: ₦${balance}`;
+                } else {
+                    userBalanceDiv.textContent = 'Unable to fetch user balance.';
+                }
+            } catch (error) {
+                userBalanceDiv.textContent = 'Error fetching balance';
             }
         }
     });
@@ -216,10 +220,10 @@
 
         try {
             // Fetch user balance from Firestore
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                const balance = userData.balance;
+            const userBalanceDoc = await getDoc(doc(db, "balances", user.uid));
+            if (userBalanceDoc.exists()) {
+                const userBalanceData = userBalanceDoc.data();
+                const balance = userBalanceData.balance;
 
                 // Check if the user has enough balance
                 const price = parseFloat(amountToPay.textContent.replace('₦', ''));
